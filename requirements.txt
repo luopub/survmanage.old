@@ -1,0 +1,8 @@
+django==3.2.7
+cryptography
+djangorestframework
+django-filter
+pillow
+html2text
+mysqlclient
+django-cors-headers

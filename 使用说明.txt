@@ -1,0 +1,2 @@
+1. 在mysql新建数据库：survmanage
+2. 修改settings.py数据库设置中的连接密码
