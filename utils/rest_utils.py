@@ -14,8 +14,14 @@ logger = get_logger('rest_utils')
 class MyJSONRenderer(renderers.JSONRenderer):
     def render(self, data, accepted_media_type=None, renderer_context=None):
         status_code = renderer_context['response'].status_code
-        code = 0 if 200 <= status_code < 300 else status_code
-        message = 'Success' if 200 <= status_code < 300 else 'Failed'
+        if 200 <= status_code < 300 and 'code_message' in data:
+            code = data['code_message']['code']
+            message = data['code_message']['message']
+            data = {k: data[k] for k in data if k != 'code_message'}
+        else:
+            code = 0 if 200 <= status_code < 300 else status_code
+            message = 'Success' if 200 <= status_code < 300 else 'Failed'
+
         data = {'code': code, 'message': message, 'data': data}
         return super().render(data, accepted_media_type, renderer_context)
 
@@ -81,20 +87,6 @@ class CharArrayFilter(ArrayFilter):
     Filtering the char array fields
     """
     pass
-
-
-class ProductCatePathSerializer(serializers.ModelSerializer):
-    """
-    This is required for category map from source to system product
-    """
-    product_cate_path = serializers.SerializerMethodField()
-
-    @staticmethod
-    def get_product_cate_path(obj):
-        if obj.product_category:
-            return obj.product_category.get_cat_path(id=obj.product_category.id)
-        else:
-            return []
 
 
 class SimpleViewSetBase(type):

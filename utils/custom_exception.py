@@ -7,6 +7,8 @@ from django.db import IntegrityError
 from django.core.exceptions import ValidationError as DJ_ValidationError
 from django.http.response import Http404
 
+from .code_message_exception import CodeMsgException
+
 
 def custom_exception_handler(exc, context):
     response = exception_handler(exc, context)
@@ -14,7 +16,9 @@ def custom_exception_handler(exc, context):
     errors_406 = (ValueError, IntegrityError, DJ_ValidationError)
     errors_403 = (AttributeError, )
 
-    if not response:
+    if isinstance(exc, CodeMsgException):
+        return exc.to_response()
+    elif not response:
         if isinstance(exc, errors_406):
             return Response(data={'message': exc.args[0]}, status=status.HTTP_406_NOT_ACCEPTABLE)
         elif isinstance(exc, errors_403):
