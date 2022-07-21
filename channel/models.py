@@ -11,7 +11,7 @@ MAX_CHANNEL_URL_LEN = 1024
 
 class Channel(models.Model):
     cno = models.IntegerField(unique=True, verbose_name='通道编号')
-    cid = models.CharField(max_length=MAX_CHANNEL_ID_LEN, unique=True, verbose_name='通道识别ID')
+    cid = models.CharField(max_length=MAX_CHANNEL_ID_LEN, unique=True, verbose_name='通道ID')
     name = models.CharField(max_length=MAX_CHANNEL_NAME_LEN, verbose_name='通道名称')
     site = models.CharField(max_length=MAX_CHANNEL_SITE_LEN, verbose_name='通道位置')
     url = models.CharField(max_length=MAX_CHANNEL_URL_LEN, verbose_name='通道RTSP网址')
