@@ -8,7 +8,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 
 urlpatterns = [
-    path('login/', obtain_auth_token),
+    path('api-token-auth/', obtain_auth_token),
     path('alert/', include(alert_router.urls)),
     path('algorithm/', include(algorithm_router.urls)),
     path('channel/', include(channel_router.urls)),
