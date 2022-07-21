@@ -55,6 +55,6 @@ def custom_exception_handler(exc, context):
         else:
             message = '未知错误'
 
-        return CodeMsgException(ErrorCode.SYSTEM_ERROR_BASE+Response.status_code, message)
+        return CodeMsgException(ErrorCode.SYSTEM_ERROR_BASE+response.status_code, message).to_response()
 
     return response
