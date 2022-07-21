@@ -14,7 +14,7 @@ logger = get_logger('rest_utils')
 class MyJSONRenderer(renderers.JSONRenderer):
     def render(self, data, accepted_media_type=None, renderer_context=None):
         status_code = renderer_context['response'].status_code
-        if 200 <= status_code < 300 and 'code_message' in data:
+        if 200 <= status_code < 300 and data and 'code_message' in data:
             code = data['code_message']['code']
             message = data['code_message']['message']
             data = {k: data[k] for k in data if k != 'code_message'}
