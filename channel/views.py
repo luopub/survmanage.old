@@ -22,6 +22,13 @@ class ChannelAlgorithmViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleView
     model = ChannelAlgorithm
 
 
+class ChannelAlgorithmViewSet2(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
+    model = ChannelAlgorithm
+
+    serial_depth = 1
+
+
 router = routers.DefaultRouter()
 router.register('channels', ChannelViewSet)
 router.register('channelalgorithms', ChannelAlgorithmViewSet)
+router.register('channelalgorithms2', ChannelAlgorithmViewSet2)
