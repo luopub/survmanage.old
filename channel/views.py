@@ -12,6 +12,11 @@ from .models import Channel, ChannelAlgorithm
 class ChannelViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = Channel
 
+    @action(detail=False, methods=['get'])
+    def get_used_free_channel_nos(self, request):
+        used_nos, free_nos = self.model.get_used_free_channel_nos()
+        return Response({'used_nos': used_nos, 'free_nos': free_nos})
+
 
 class ChannelAlgorithmViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = ChannelAlgorithm

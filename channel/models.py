@@ -2,6 +2,9 @@ from django.db import models
 
 from algorithm.models import Algorithm, AlgorithmParametersMixin
 
+from utils.utils import values_list_to_list
+
+MAX_CHANNEL_NUM = 8
 
 MAX_CHANNEL_ID_LEN = 32
 MAX_CHANNEL_NAME_LEN = 64
@@ -15,6 +18,12 @@ class Channel(models.Model):
     name = models.CharField(max_length=MAX_CHANNEL_NAME_LEN, verbose_name='通道名称')
     site = models.CharField(max_length=MAX_CHANNEL_SITE_LEN, verbose_name='通道位置')
     url = models.CharField(max_length=MAX_CHANNEL_URL_LEN, verbose_name='通道RTSP网址')
+
+    @classmethod
+    def get_used_free_channel_nos(cls):
+        used_nos = values_list_to_list(cls.objects.all().values_list('cno'))
+        free_nos = [n for n in range(1, MAX_CHANNEL_NUM+1) if n not in used_nos]
+        return used_nos, free_nos
 
 
 class ChannelAlgorithm(models.Model, AlgorithmParametersMixin):
