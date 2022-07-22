@@ -5,7 +5,8 @@ MAX_ALGORITHM_NAME_LEN = 32
 
 
 class Algorithm(models.Model):
-    name = models.CharField(max_length=MAX_ALGORITHM_NAME_LEN, verbose_name='名称')
+    name = models.CharField(max_length=MAX_ALGORITHM_NAME_LEN, verbose_name='英文名称')
+    name_ch = models.CharField(max_length=MAX_ALGORITHM_NAME_LEN, verbose_name='中文名称')
 
 
 class AlgorithmParametersMixin:
