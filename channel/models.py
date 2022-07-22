@@ -30,14 +30,14 @@ class ChannelAlgorithm(models.Model, AlgorithmParametersMixin):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE, verbose_name='通道')
     algorithm = models.ForeignKey(Algorithm, on_delete=models.CASCADE, verbose_name='算法')
     # Comma seperated integers left, top, width, height
-    poi_rect = models.CharField(max_length=20, null=True, verbose_name='POI矩形区')
+    roi_rect = models.CharField(max_length=20, null=True, verbose_name='ROI矩形区')
 
     @staticmethod
-    def decode_poi(poi_rect):
-        if not poi_rect:
+    def decode_roi(roi_rect):
+        if not roi_rect:
             left = top = width = height = 0
         else:
-            values = poi_rect.split(',')
+            values = roi_rect.split(',')
             left = int(values[0])
             top = int(values[1])
             width = int(values[2])
@@ -46,5 +46,5 @@ class ChannelAlgorithm(models.Model, AlgorithmParametersMixin):
         return left, top, width, height
 
     @staticmethod
-    def encode_poi(left, top, width, height):
+    def encode_roi(left, top, width, height):
         return f'{left},{top},{width},{height}'
