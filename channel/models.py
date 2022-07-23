@@ -30,14 +30,14 @@ class ChannelAlgorithm(models.Model, AlgorithmParametersMixin):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE, verbose_name='通道')
     algorithm = models.ForeignKey(Algorithm, on_delete=models.CASCADE, verbose_name='算法')
     # Comma seperated integers left, top, width, height
-    roi_rect = models.CharField(max_length=20, null=True, verbose_name='ROI矩形区')
+    roi_region = models.CharField(max_length=20, null=True, verbose_name='ROI矩形区')
 
     @staticmethod
-    def decode_roi(roi_rect):
-        if not roi_rect:
+    def decode_roi(roi_region):
+        if not roi_region:
             left = top = width = height = 0
         else:
-            values = roi_rect.split(',')
+            values = roi_region.split(',')
             left = int(values[0])
             top = int(values[1])
             width = int(values[2])
