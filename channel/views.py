@@ -17,6 +17,12 @@ class ChannelViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
         used_nos, free_nos = self.model.get_used_free_channel_nos()
         return Response({'used_nos': used_nos, 'free_nos': free_nos})
 
+    @action(detail=True, methods=['post'])
+    def config_alg(self, request, pk):
+        channel = self.model.objects.get(pk=pk)
+        channel.config_alg(request.data)
+        return Response({})
+
 
 class ChannelAlgorithmViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = ChannelAlgorithm

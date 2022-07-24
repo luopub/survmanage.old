@@ -6,17 +6,12 @@ from rest_framework.response import Response
 from utils.rest_mixins import GroupbyMixin
 from utils.rest_utils import MyModelViewSet, SimpleViewSetBase
 
-from .models import Algorithm, AlgorithmParameters
+from .models import Algorithm
 
 
 class AlgorithmViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = Algorithm
 
 
-class AlgorithmParametersViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
-    model = AlgorithmParameters
-
-
 router = routers.DefaultRouter()
 router.register('algorithms', AlgorithmViewSet)
-router.register('algorithmparameters', AlgorithmParametersViewSet)

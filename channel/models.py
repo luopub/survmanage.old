@@ -1,6 +1,6 @@
 from django.db import models
 
-from algorithm.models import Algorithm, AlgorithmParametersMixin
+from algorithm.models import Algorithm, AlgorithmParametersBase
 
 from utils.utils import values_list_to_list
 
@@ -25,12 +25,34 @@ class Channel(models.Model):
         free_nos = [n for n in range(1, MAX_CHANNEL_NUM+1) if n not in used_nos]
         return used_nos, free_nos
 
+    def config_alg(self, data):
+        """
+        Configure algorithm for this channel
+        """
+        for k, v in data.items():
+            if not v['configured'] or v['configured'] == '0':
+                try:
+                    self.channelalgorithm_set.get(algorithm__name=k).delete()
+                except ChannelAlgorithm.DoesNotExist as e:
+                    pass
+            else:
+                algorithm = Algorithm.objects.get(name=k)
+                ChannelAlgorithm.objects.update_or_create(channel=self, algorithm=algorithm, defaults={
+                    'analyze_interval': v.get('analyze_interval'),
+                    'alert_interval': v.get('alert_interval'),
+                    'alert_threshold': v.get('alert_threshold'),
+                    'alert_times': v.get('alert_times')
+                })
 
-class ChannelAlgorithm(models.Model, AlgorithmParametersMixin):
+
+class ChannelAlgorithm(AlgorithmParametersBase):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE, verbose_name='通道')
     algorithm = models.ForeignKey(Algorithm, on_delete=models.CASCADE, verbose_name='算法')
     # Comma seperated integers left, top, width, height
     roi_region = models.CharField(max_length=20, null=True, verbose_name='ROI矩形区')
+
+    class Meta:
+        unique_together = (('channel', 'algorithm'),)
 
     @staticmethod
     def decode_roi(roi_region):
