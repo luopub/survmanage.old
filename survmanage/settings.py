@@ -140,6 +140,13 @@ STATICFILES_DIRS = [
     Path(BASE_DIR).joinpath('static')
 ]
 
+ALERT_IMAGE_DIR = Path(BASE_DIR).joinpath('static').joinpath('alert-img')
+
+try:
+    ALERT_IMAGE_DIR.stat()
+except:
+    ALERT_IMAGE_DIR.mkdir()
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 

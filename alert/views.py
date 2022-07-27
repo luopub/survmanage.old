@@ -13,5 +13,12 @@ class AlertViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = Alert
 
 
+class AlertViewSet2(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
+    model = Alert
+
+    serial_depth = 1
+
+
 router = routers.DefaultRouter()
 router.register('alerts', AlertViewSet)
+router.register('alerts2', AlertViewSet2)
