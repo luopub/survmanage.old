@@ -140,7 +140,7 @@ STATICFILES_DIRS = [
     Path(BASE_DIR).joinpath('static')
 ]
 
-ALERT_IMAGE_DIR = Path(BASE_DIR).joinpath('static').joinpath('alert-img')
+ALERT_IMAGE_DIR = Path(BASE_DIR).joinpath('static').joinpath('images')
 
 try:
     ALERT_IMAGE_DIR.stat()
