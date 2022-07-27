@@ -12,6 +12,12 @@ from .models import Alert
 class AlertViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = Alert
 
+    @action(detail=False, methods=['get'])
+    def get_real_time_image(self, request):
+        alert_ids = request.GET.get('alert_ids').split(',')
+        images = {id_: 'duiyaduiya-rt.png' for id_ in alert_ids}
+        return Response(images)
+
 
 class AlertViewSet2(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = Alert
