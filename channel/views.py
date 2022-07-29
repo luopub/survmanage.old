@@ -23,6 +23,12 @@ class ChannelViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
         channel.config_alg(request.data)
         return Response({})
 
+    @action(detail=False, methods=['get'])
+    def get_real_time_status(self, request):
+        channel_ids = request.GET.get('channel_ids').split(',')
+        images = {id_: (int(id_) % 2 == 0) for id_ in channel_ids}
+        return Response(images)
+
 
 class ChannelAlgorithmViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = ChannelAlgorithm
