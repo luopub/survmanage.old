@@ -6,3 +6,4 @@ pillow
 html2text
 mysqlclient
 django-cors-headers
+opencv-contrib-python

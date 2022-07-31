@@ -14,9 +14,15 @@ from .models import ProjectInfo
 class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = ProjectInfo
 
+    authentication_classes = []
+    permission_classes = []
+
     @action(detail=False, methods=['get'])
-    def activated(self, request):
-        return Response({'activated': self.model.activated()})
+    def auth_info(self, request):
+        if self.model.activated():
+            return Response({'name': self.model.objects.first().name})
+        else:
+            return Response({})
 
     @action(detail=False, methods=['post'])
     def activate(self, request):
