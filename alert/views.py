@@ -13,6 +13,7 @@ from .models import Alert
 from cameradaemon.image_client import ImageClient
 from cameradaemon.image_server_code import *
 
+
 class AlertViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = Alert
 
