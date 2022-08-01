@@ -4,6 +4,9 @@ from PIL import Image
 import time
 import os
 import ctypes
+import json
+import hashlib
+from django.conf import settings
 
 from multiprocessing import Process, Queue, Manager
 
@@ -11,6 +14,7 @@ from channel.models import Channel
 
 from .image_read_process import ImageProcessPair
 from .image_server import ImageServer
+from .image_server_code import *
 
 
 class ImageChannelsManager:
@@ -38,12 +42,62 @@ class ImageChannelsManager:
     def set_channel_algorithms(self):
         pass
 
+    def save_image_file(self, raw_frame):
+        # 格式转变，BGRtoRGB
+        frame = cv.cvtColor(raw_frame, cv.COLOR_BGR2RGB)
+
+        md5 = hashlib.md5()
+        md5.update(frame.tobytes())
+        digest = md5.hexdigest()
+
+        # 转变成Image
+        image = Image.fromarray(np.uint8(frame))
+
+        filename = f'{digest}.jpg'
+
+        filepath = settings.ALERT_IMAGE_DIR.joinpath(filename)
+
+        image.save(filepath)
+
+        return filename
+
     def get_latest_image(self, cno):
-        return self.process_pairs[cno - 1].pr.get_latest_image()
+        frame = self.process_pairs[cno - 1].pr.get_latest_image()
+
+        return self.save_image_file(frame)
 
     def handlers(self, data):
-        pass
-        return data.decode('utf8').upper().encode('utf8')
+        """
+        所有命令应该是json格式:
+        {
+            cmd: int,
+            data: dict
+        }
+        返回值：
+        {
+            code: int,
+            data: dict
+        }
+        成功返回code=0
+        """
+        res = {
+            'code': CODE_INVALID_CMD,
+            'data': {}
+        }
+        try:
+            data = json.loads(data.decode('utf8'))
+            cmd = data['cmd']
+            if cmd == CMD_GET_LATEST_IMAGE:
+                cno = data['data']['cno']
+                res = {
+                    'code': CODE_SUCCESS,
+                    'data': {
+                        'filename': self.get_latest_image(cno)
+                    }
+                }
+        except:
+            pass
+        return json.dumps(res).encode('utf8')
 
     def main_loop(self):
         self.start_channels()
