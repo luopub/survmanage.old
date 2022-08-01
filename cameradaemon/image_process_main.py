@@ -80,17 +80,20 @@ class ImageChannelsManager:
         }
         成功返回code=0
         """
+        if not data:
+            return None
+
         res = {
-            'code': CODE_INVALID_CMD,
+            'code': IMG_CODE_INVALID_CMD,
             'data': {}
         }
         try:
             data = json.loads(data.decode('utf8'))
             cmd = data['cmd']
-            if cmd == CMD_GET_LATEST_IMAGE:
+            if cmd == IMG_CMD_GET_LATEST_IMAGE:
                 cno = data['data']['cno']
                 res = {
-                    'code': CODE_SUCCESS,
+                    'code': IMG_CODE_SUCCESS,
                     'data': {
                         'filename': self.get_latest_image(cno)
                     }

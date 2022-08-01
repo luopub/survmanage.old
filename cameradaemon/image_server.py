@@ -13,13 +13,11 @@ class ImageServerHandler(socketserver.BaseRequestHandler):
         # self.request is the TCP socket connected to the client
         data = self.request.recv(1024).strip()
         print(data)
-        if self.server.handler:
-            res = self.server.handler(data)
 
-        if not self.server.handler or not res:
-            res = 'Not processeded!'.encode('utf8')
+        res = self.server.handler(data)
 
-        self.request.sendall(res)
+        if res:
+            self.request.sendall(res)
 
 
 class ImageServer(socketserver.TCPServer):

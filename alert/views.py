@@ -10,7 +10,8 @@ from utils.rest_utils import MyModelViewSet, SimpleViewSetBase
 from utils.utils import get_filter_for_all_fields
 
 from .models import Alert
-
+from cameradaemon.image_client import ImageClient
+from cameradaemon.image_server_code import *
 
 class AlertViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = Alert
@@ -18,7 +19,27 @@ class AlertViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     @action(detail=False, methods=['get'])
     def get_real_time_image(self, request):
         alert_ids = request.GET.get('alert_ids').split(',')
-        images = {id_: 'duiyaduiya-rt.png' for id_ in alert_ids}
+        if not alert_ids:
+            alert_ids = []
+        else:
+            alert_ids = [int(id_) for id_ in alert_ids]
+
+        # 取得所有channel no，不用重复读取图片
+        alert_channels = self.model.objects.filter(id__in=alert_ids).values_list('id', 'channel__cno')
+        cnos = set([item[1] for item in alert_channels])
+        cno_images = {}
+        for cno in cnos:
+            res = ImageClient(IMG_CMD_GET_LATEST_IMAGE, cno=cno).do_request()
+            if res and res['code'] == IMG_CODE_SUCCESS:
+                cno_images[cno] = res['data']['filename']
+
+        # 将图片与alert id对应
+        images = {}
+        for item in alert_channels:
+            if item[1] in cno_images:
+                images[str(item[0])] = cno_images[item[1]]
+
+        # images = {id_: 'duiyaduiya-rt.png' for id_ in alert_ids}
         return Response(images)
 
 

@@ -92,7 +92,7 @@ class ImageConsumeProcess(Process):
             if int(time.time() - t1) >= 1:
                 t1 = time.time()
 
-                print("raw_img_queue length", self.raw_img_queue.qsize(), frame_count)
+                # print("raw_img_queue length", self.raw_img_queue.qsize(), frame_count)
                 frame_count = 0
 
                 # 每隔一小段时间保存一次最新图像
