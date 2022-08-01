@@ -7,7 +7,10 @@ import ctypes
 
 from multiprocessing import Process, Queue, Manager
 
+from channel.models import Channel
+
 from .image_read_process import ImageProcessPair
+from .image_server import ImageServer
 
 
 class ImageChannelsManager:
@@ -38,11 +41,25 @@ class ImageChannelsManager:
     def get_latest_image(self, cno):
         return self.process_pairs[cno - 1].pr.get_latest_image()
 
+    def handlers(self, data):
+        pass
+        return data.decode('utf8').upper().encode('utf8')
+
     def main_loop(self):
         self.start_channels()
 
-        while True:
-            time.sleep(1)
+        time.sleep(5)
+
+        # 读取通道数据，设置camera地址
+        channels = Channel.objects.all()
+        for c in channels:
+            if c.cno > self.channels_num:
+                continue
+            self.set_channel_camera(c.cno, c.url)
+
+        ImageServer.serve(self.handlers)
+        # while True:
+        #     time.sleep(1)
 
     @staticmethod
     def main(**kwargs):
@@ -53,10 +70,3 @@ class ImageChannelsManager:
         icm = ImageChannelsManager(max_camera)
 
         icm.main_loop()
-
-        # for i in range(len(icm.process_pairs)):
-        #     icm.set_channel_camera(i + 1, rtsp_url)
-
-        # icm.join()
-
-        # print('done')
