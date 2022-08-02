@@ -1,3 +1,4 @@
+import json
 import socketserver
 from django.conf import settings
 
@@ -7,17 +8,19 @@ class ImageServerHandler(socketserver.BaseRequestHandler):
         super(ImageServerHandler, self).__init__(*args, **kwargs)
 
     def handle(self):
-        # print('self.server.handler', self.server.handler)
-        print("{} wrote:".format(self.client_address[0]))
-
         # self.request is the TCP socket connected to the client
         data = self.request.recv(1024).strip()
-        print(data)
+        if data:
+            print("{} wrote:".format(self.client_address[0]))
 
-        res = self.server.handler(data)
+            data = json.loads(data.decode('utf8'))
+            print(data)
 
-        if res:
-            self.request.sendall(res)
+            res = self.server.handler(data)
+
+            if res:
+                res = json.dumps(res).encode('utf8')
+                self.request.sendall(res)
 
 
 class ImageServer(socketserver.TCPServer):

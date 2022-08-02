@@ -9,6 +9,7 @@ from multiprocessing import Process, Queue, Manager, Array
 
 from .image_client import ImageClient
 from .image_server_code import *
+from .utils import save_raw_frame
 
 
 class ImageStreamProcess(Process):
@@ -67,7 +68,7 @@ class ImageStreamProcess(Process):
 
 
 class ImageConsumeProcess(Process):
-    def __init__(self, cno, raw_img_queue, model_path=None, model_device=None):
+    def __init__(self, cno, raw_img_queue, model_path=None, model_device=None, predict_threshold=0.5):
         super(ImageConsumeProcess, self).__init__(target=self.process_loop)
         self.cno = cno
         self.raw_img_queue = raw_img_queue
@@ -79,8 +80,9 @@ class ImageConsumeProcess(Process):
         self.model = None
         self.model_path = model_path
         self.model_device = model_device
+        self.predict_threshold = predict_threshold
 
-    def set_params(self, latest_img_interval=None, predict_interval=None):
+    def set_params(self, latest_img_interval=None, predict_interval=None, predict_threshold=None):
         """
         设置参数, 这些原子数据类型不用同步类型
         """
@@ -90,29 +92,46 @@ class ImageConsumeProcess(Process):
         if predict_interval is not None:
             self.predict_interval = predict_interval
 
+        if predict_threshold is not None:
+            self.predict_threshold = predict_threshold
+
     def init_model(self):
         if self.model_path:
             self.model = YOLOv5(self.model_path, device=self.model_device)
 
-    def detect_single_frame(self, raw_frame):
+    def predict_single_frame(self, raw_frame):
         # 格式转变，BGRtoRGB
         frame = cv.cvtColor(raw_frame, cv.COLOR_BGR2RGB)
         results = self.model.predict(frame)
 
-        pred = results.pred[0].numpy()
-        if pred:
-            img = Image.fromarray(results.render()[0])
+        if len(results.pred[0]):
+            # 过滤掉小于threshold的结果
+            results.pred[0] = results.pred[0][results.pred[0][:, -2] >= self.predict_threshold]
 
-            res = ImageClient(IMG_CMD_OBJECT_DETECTED, cno=self.cno).do_request()
-            if res and res['code'] == IMG_CODE_SUCCESS:
-                pass
+            pred = results.pred[0].numpy()
+            if pred.shape[0]:
+                filename = save_raw_frame(results.render()[0], cno=self.cno, cvt_color=False)
+
+                # 结果转换成便于处理的结果
+                predicts = [
+                    {
+                        'confidence': float(p[-2]),
+                        'name': results.names[int(p[-1])]
+                    }
+                    for p in pred
+                ]
+
+                res = ImageClient(IMG_CMD_OBJECT_DETECTED, cno=self.cno, filename=filename, predicts=predicts).do_request(wait_result=False)
+                if res and res['code'] == IMG_CODE_SUCCESS:
+                    pass
 
     # 在缓冲栈中读取数据:
     def process_loop(self):
         print('Process to read: %s' % os.getpid())
         self.init_model()
         # 开始时间
-        t1 = time.time()
+        t1 = time.time()  # 最新图片保存定时
+        t2 = time.time()  # 预测定时
 
         frame_count = 0
         while True:
@@ -128,6 +147,10 @@ class ImageConsumeProcess(Process):
             # 转变成Image
             # frame = Image.fromarray(np.uint8(frame))
             frame = value
+
+            if (time.time() - t2) * 1000 > self.predict_interval:
+                t2 = time.time()
+                self.predict_single_frame(frame)
 
             if (time.time() - t1) * 1000 > self.latest_img_interval:
                 t1 = time.time()

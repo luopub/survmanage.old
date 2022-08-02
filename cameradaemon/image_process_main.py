@@ -5,6 +5,7 @@ import json
 from django.conf import settings
 
 from channel.models import Channel
+from alert.models import Alert
 
 from .image_read_process import ImageStreamProcess, ImageConsumeProcess
 from .image_server import ImageServer
@@ -82,7 +83,6 @@ class ImageChannelsManager:
             'data': {}
         }
         try:
-            data = json.loads(data.decode('utf8'))
             cmd = data['cmd']
             if cmd == IMG_CMD_GET_LATEST_IMAGE:
                 cno = data['data']['cno']
@@ -92,9 +92,18 @@ class ImageChannelsManager:
                         'filename': self.get_latest_image(cno)
                     }
                 }
+            elif cmd == IMG_CMD_OBJECT_DETECTED:
+                cno = data['data']['cno']
+                filename = data['data']['filename']
+                predicts = data['data']['predicts']
+                Alert.add_alerts(cno=cno, filename=filename, predicts=predicts)
+                res = {
+                    'code': IMG_CODE_SUCCESS,
+                    'data': {}
+                }
         except:
             pass
-        return json.dumps(res).encode('utf8')
+        return res
 
     def main_loop(self):
         self.start_channels()

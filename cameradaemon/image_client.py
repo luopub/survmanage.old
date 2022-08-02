@@ -8,7 +8,7 @@ class ImageClient:
         self.cmd = cmd
         self.data = kwargs
 
-    def do_request(self):
+    def do_request(self, wait_result=True):
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 # Connect to server and send data
@@ -19,12 +19,14 @@ class ImageClient:
                 }
                 sock.sendall(json.dumps(data).encode('utf8'))
 
-                # Receive data from the server and shut down
-                received = str(sock.recv(1024), "utf-8")
-
                 print("Sent:     {}".format(data))
-                print("Received: {}".format(received))
 
-                return json.loads(received)
+                if wait_result:
+                    # Receive data from the server and shut down
+                    received = str(sock.recv(1024), "utf8")
+
+                    print("Received: {}".format(received))
+
+                    return json.loads(received)
         except:
             pass

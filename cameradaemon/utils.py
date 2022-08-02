@@ -29,12 +29,15 @@ def get_digest(bytes):
     return digest
 
 
-def save_raw_frame(raw_frame, cno=None):
+def save_raw_frame(raw_frame, cno=None, cvt_color=True):
     """
     保存摄像头原始像素图片
     """
     # 格式转变，BGRtoRGB
-    frame = cv.cvtColor(raw_frame, cv.COLOR_BGR2RGB)
+    if cvt_color:
+        frame = cv.cvtColor(raw_frame, cv.COLOR_BGR2RGB)
+    else:
+        frame = raw_frame
 
     digest = get_digest(frame.tobytes())
 
