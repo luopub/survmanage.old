@@ -53,7 +53,7 @@ class ImageChannelsManager:
         # 转变成Image
         image = Image.fromarray(np.uint8(frame))
 
-        filename = f'{digest}.jpg'
+        filename = f'{time.strftime("%Y%m%d%H%M%S", time.localtime())}-{digest}.jpg'
 
         filepath = settings.ALERT_IMAGE_DIR.joinpath(filename)
 

@@ -5,7 +5,7 @@ import time
 import os
 import ctypes
 
-from multiprocessing import Process, Queue, Manager
+from multiprocessing import Process, Queue, Manager, Array
 
 
 class ImageStreamProcess(Process):
@@ -67,7 +67,9 @@ class ImageConsumeProcess(Process):
     def __init__(self, raw_img_queue):
         super(ImageConsumeProcess, self).__init__(target=self.process_loop)
         self.raw_img_queue = raw_img_queue
-        self.latest_img = Queue(1)
+        # 分配一个足够大的buffer暂存最后一张图片
+        self.latest_img = Array(ctypes.c_int, np.zeros((1280*1280*3, ), dtype=np.uint8), lock=True)
+        self.img_size = Array(ctypes.c_int, np.zeros((3, )).astype(int), lock=True)
 
     # 在缓冲栈中读取数据:
     def process_loop(self):
@@ -85,26 +87,30 @@ class ImageConsumeProcess(Process):
             frame_count += 1
 
             # 格式转变，BGRtoRGB
-            frame = cv.cvtColor(value, cv.COLOR_BGR2RGB)
+            # frame = cv.cvtColor(value, cv.COLOR_BGR2RGB)
             # 转变成Image
             # frame = Image.fromarray(np.uint8(frame))
+            frame = value
 
-            if int(time.time() - t1) >= 1:
+            if int(time.time() - t1) >= 2:
                 t1 = time.time()
 
                 # print("raw_img_queue length", self.raw_img_queue.qsize(), frame_count)
                 frame_count = 0
 
                 # 每隔一小段时间保存一次最新图像
-                try:
-                    self.latest_img.get_nowait()
-                except:
-                    pass
-                self.latest_img.put(frame)
+                self.img_size[:] = frame.shape
+
+                # print("raw_img_queue length 1", self.img_size[:], frame.dtype)
+
+                self.latest_img[:frame.shape[0]*frame.shape[1]*frame.shape[2]] = frame.astype(np.uint8).reshape((-1, ))
 
     def get_latest_image(self):
         try:
-            return self.latest_img.get_nowait()
+            height, width, depth = self.img_size[:]
+            # print("get_latest_image", height, width, depth)
+            if height * width * depth:
+                return np.array(self.latest_img[:height*width*depth]).astype(np.uint8).reshape(height, width, depth)
         except:
             pass
 
