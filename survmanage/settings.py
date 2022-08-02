@@ -136,17 +136,19 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.2/howto/static-files/
 
 STATIC_URL = '/static/'
+# ALERT_IMAGE_DIR = Path(BASE_DIR).joinpath('static').joinpath('images')
+DYNAMIC_FILE_DIR = Path(r"D:\work\parttime\geyu-xr7.5-surveillance-7714643320\dynamic")
+ALERT_IMAGE_DIR = DYNAMIC_FILE_DIR.joinpath('images')
 
 STATICFILES_DIRS = [
-    Path(BASE_DIR).joinpath('static')
+    Path(BASE_DIR).joinpath('static'),
+    DYNAMIC_FILE_DIR
 ]
 
-ALERT_IMAGE_DIR = Path(BASE_DIR).joinpath('static').joinpath('images')
-
 try:
-    ALERT_IMAGE_DIR.stat()
+    ALERT_IMAGE_DIR.mkdir(parents=True)
 except:
-    ALERT_IMAGE_DIR.mkdir()
+    pass
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field

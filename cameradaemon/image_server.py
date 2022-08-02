@@ -7,7 +7,7 @@ class ImageServerHandler(socketserver.BaseRequestHandler):
         super(ImageServerHandler, self).__init__(*args, **kwargs)
 
     def handle(self):
-        print('self.server.handler', self.server.handler)
+        # print('self.server.handler', self.server.handler)
         print("{} wrote:".format(self.client_address[0]))
 
         # self.request is the TCP socket connected to the client
