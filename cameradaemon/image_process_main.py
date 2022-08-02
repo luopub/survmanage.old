@@ -1,24 +1,20 @@
-import cv2 as cv
-import numpy as np
-from PIL import Image
 import time
 import os
 import ctypes
 import json
-import hashlib
 from django.conf import settings
-
-from multiprocessing import Process, Queue, Manager
 
 from channel.models import Channel
 
 from .image_read_process import ImageStreamProcess, ImageConsumeProcess
 from .image_server import ImageServer
 from .image_server_code import *
+from .utils import save_raw_frame
 
 
 class ImageProcessPair:
-    def __init__(self, camera):
+    def __init__(self, cno, camera):
+        self.cno = cno
         self.camera = camera
         self.raw_img_queue = None
         self.pw = None
@@ -27,7 +23,7 @@ class ImageProcessPair:
     def start(self):
         # pw = Process(target=write, args=(q, rtsp_url, queue_size))
         self.pw = ImageStreamProcess(self.camera)
-        self.pr = ImageConsumeProcess(self.pw.raw_img_queue, model_path=settings.MODEL_PATH, model_device=settings.MODEL_DEVICE)
+        self.pr = ImageConsumeProcess(self.cno, self.pw.raw_img_queue, model_path=settings.MODEL_PATH, model_device=settings.MODEL_DEVICE)
         # 启动子进程pw，写入:
         self.pw.start()
         # 启动子进程pr，读取:
@@ -38,7 +34,7 @@ class ImageChannelsManager:
     def __init__(self, channels_num):
         # 通道编号转换成索引
         self.channels_num = channels_num
-        self.process_pairs = [ImageProcessPair('') for _ in range(self.channels_num)]
+        self.process_pairs = [ImageProcessPair(c+1, '') for c in range(self.channels_num)]
         # super(ImageChannelsManager, self).__init__(target=self.process_loop)
 
     def start_channels(self):
@@ -59,29 +55,10 @@ class ImageChannelsManager:
     def set_channel_algorithms(self):
         pass
 
-    def save_image_file(self, raw_frame):
-        # 格式转变，BGRtoRGB
-        frame = cv.cvtColor(raw_frame, cv.COLOR_BGR2RGB)
-
-        md5 = hashlib.md5()
-        md5.update(frame.tobytes())
-        digest = md5.hexdigest()
-
-        # 转变成Image
-        image = Image.fromarray(np.uint8(frame))
-
-        filename = f'{time.strftime("%Y%m%d%H%M%S", time.localtime())}-{digest}.jpg'
-
-        filepath = settings.ALERT_IMAGE_DIR.joinpath(filename)
-
-        image.save(filepath)
-
-        return filename
-
     def get_latest_image(self, cno):
         frame = self.process_pairs[cno - 1].pr.get_latest_image()
 
-        return self.save_image_file(frame)
+        return save_raw_frame(frame, cno=cno)
 
     def handlers(self, data):
         """

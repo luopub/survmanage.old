@@ -5,8 +5,10 @@ import time
 import os
 import ctypes
 from yolov5 import YOLOv5
-
 from multiprocessing import Process, Queue, Manager, Array
+
+from .image_client import ImageClient
+from .image_server_code import *
 
 
 class ImageStreamProcess(Process):
@@ -65,8 +67,9 @@ class ImageStreamProcess(Process):
 
 
 class ImageConsumeProcess(Process):
-    def __init__(self, raw_img_queue, model_path=None, model_device=None):
+    def __init__(self, cno, raw_img_queue, model_path=None, model_device=None):
         super(ImageConsumeProcess, self).__init__(target=self.process_loop)
+        self.cno = cno
         self.raw_img_queue = raw_img_queue
         # 分配一个足够大的buffer暂存最后一张图片
         self.latest_img = Array(ctypes.c_int, np.zeros((1280*1280*3, ), dtype=np.uint8), lock=True)
@@ -87,11 +90,27 @@ class ImageConsumeProcess(Process):
         if predict_interval is not None:
             self.predict_interval = predict_interval
 
+    def init_model(self):
+        if self.model_path:
+            self.model = YOLOv5(self.model_path, device=self.model_device)
+
+    def detect_single_frame(self, raw_frame):
+        # 格式转变，BGRtoRGB
+        frame = cv.cvtColor(raw_frame, cv.COLOR_BGR2RGB)
+        results = self.model.predict(frame)
+
+        pred = results.pred[0].numpy()
+        if pred:
+            img = Image.fromarray(results.render()[0])
+
+            res = ImageClient(IMG_CMD_OBJECT_DETECTED, cno=self.cno).do_request()
+            if res and res['code'] == IMG_CODE_SUCCESS:
+                pass
+
     # 在缓冲栈中读取数据:
     def process_loop(self):
         print('Process to read: %s' % os.getpid())
-        if self.model_path:
-            self.model = YOLOv5(self.model_path, device=self.model_device)
+        self.init_model()
         # 开始时间
         t1 = time.time()
 
