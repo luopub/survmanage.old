@@ -181,3 +181,7 @@ CORS_ORIGIN_WHITELIST = [
 ]
 
 IMAGE_SERVER_HOST, IMAGE_SERVER_PORT = "localhost", 9999
+
+MODEL_PATH = r"E:\data\yolov5-checkpoints\yolov5s.pt"
+MODEL_DEVICE = 'cpu'
+

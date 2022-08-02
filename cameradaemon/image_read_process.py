@@ -4,6 +4,7 @@ from PIL import Image
 import time
 import os
 import ctypes
+from yolov5 import YOLOv5
 
 from multiprocessing import Process, Queue, Manager, Array
 
@@ -64,16 +65,33 @@ class ImageStreamProcess(Process):
 
 
 class ImageConsumeProcess(Process):
-    def __init__(self, raw_img_queue):
+    def __init__(self, raw_img_queue, model_path=None, model_device=None):
         super(ImageConsumeProcess, self).__init__(target=self.process_loop)
         self.raw_img_queue = raw_img_queue
         # 分配一个足够大的buffer暂存最后一张图片
         self.latest_img = Array(ctypes.c_int, np.zeros((1280*1280*3, ), dtype=np.uint8), lock=True)
+        self.latest_img_interval = 1000  # In milliseconds
+        self.predict_interval = 1000  # In milliseconds
         self.img_size = Array(ctypes.c_int, np.zeros((3, )).astype(int), lock=True)
+        self.model = None
+        self.model_path = model_path
+        self.model_device = model_device
+
+    def set_params(self, latest_img_interval=None, predict_interval=None):
+        """
+        设置参数, 这些原子数据类型不用同步类型
+        """
+        if latest_img_interval is not None:
+            self.latest_img_interval = latest_img_interval
+
+        if predict_interval is not None:
+            self.predict_interval = predict_interval
 
     # 在缓冲栈中读取数据:
     def process_loop(self):
         print('Process to read: %s' % os.getpid())
+        if self.model_path:
+            self.model = YOLOv5(self.model_path, device=self.model_device)
         # 开始时间
         t1 = time.time()
 
@@ -92,7 +110,7 @@ class ImageConsumeProcess(Process):
             # frame = Image.fromarray(np.uint8(frame))
             frame = value
 
-            if int(time.time() - t1) >= 2:
+            if (time.time() - t1) * 1000 > self.latest_img_interval:
                 t1 = time.time()
 
                 # print("raw_img_queue length", self.raw_img_queue.qsize(), frame_count)
@@ -113,20 +131,3 @@ class ImageConsumeProcess(Process):
                 return np.array(self.latest_img[:height*width*depth]).astype(np.uint8).reshape(height, width, depth)
         except:
             pass
-
-
-class ImageProcessPair:
-    def __init__(self, camera):
-        self.camera = camera
-        self.raw_img_queue = None
-        self.pw = None
-        self.pr = None
-
-    def start(self):
-        # pw = Process(target=write, args=(q, rtsp_url, queue_size))
-        self.pw = ImageStreamProcess(self.camera)
-        self.pr = ImageConsumeProcess(self.pw.raw_img_queue)
-        # 启动子进程pw，写入:
-        self.pw.start()
-        # 启动子进程pr，读取:
-        self.pr.start()

@@ -12,9 +12,26 @@ from multiprocessing import Process, Queue, Manager
 
 from channel.models import Channel
 
-from .image_read_process import ImageProcessPair
+from .image_read_process import ImageStreamProcess, ImageConsumeProcess
 from .image_server import ImageServer
 from .image_server_code import *
+
+
+class ImageProcessPair:
+    def __init__(self, camera):
+        self.camera = camera
+        self.raw_img_queue = None
+        self.pw = None
+        self.pr = None
+
+    def start(self):
+        # pw = Process(target=write, args=(q, rtsp_url, queue_size))
+        self.pw = ImageStreamProcess(self.camera)
+        self.pr = ImageConsumeProcess(self.pw.raw_img_queue, model_path=settings.MODEL_PATH, model_device=settings.MODEL_DEVICE)
+        # 启动子进程pw，写入:
+        self.pw.start()
+        # 启动子进程pr，读取:
+        self.pr.start()
 
 
 class ImageChannelsManager:
