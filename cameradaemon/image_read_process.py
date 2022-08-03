@@ -67,6 +67,96 @@ class ImageStreamProcess(Process):
             time.sleep(10)
 
 
+class DetectionModel:
+    def __init__(self,
+                 model_path,
+                 model_device,
+                 predict_threshold=0.5,
+                 max_continous_predict=10
+                 ):
+        self.model = None
+        self.model_path = model_path
+        self.model_device = model_device
+        self.predict_threshold = predict_threshold
+        self.max_continous_predict = max_continous_predict
+        self.prev_predicts_count = dict()  # 保存前面几次的预测结果，如果未超过max_continous_predict， 就不多次保存
+
+    def init_model(self):
+        if self.model_path:
+            self.model = YOLOv5(self.model_path, device=self.model_device)
+
+    def predict_single_frame(self, raw_frame, cno=0):
+        # 格式转变，BGRtoRGB
+        frame = cv.cvtColor(raw_frame, cv.COLOR_BGR2RGB)
+        # Results结构参考yolov5源代码Detections.(\yolov5\models\common.py)
+        results = self.model.predict(frame)
+
+        if len(results.pred[0]) == 0:
+            # 如果这次没有有效报警，那么清掉所有计数
+            self.prev_predicts_count.clear()
+
+        # 过滤掉小于threshold的结果
+        results.pred[0] = results.pred[0][results.pred[0][:, -2] >= self.predict_threshold]
+
+        pred = results.pred[0].numpy()
+        if pred.shape[0]:
+            filename = save_raw_frame(results.render()[0], cno=cno, cvt_color=False)
+
+            # 同一个类别只保留一个记录
+            classes = set()
+            remain_rows = []
+            for i in range(pred.shape[0]):
+                if pred[i][-1] not in classes:
+                    classes.add(pred[i][-1])
+                    remain_rows.append(i)
+
+            pred = pred[remain_rows, :]
+
+            # 结果转换成便于处理的结果
+            predicts = [
+                {
+                    'confidence': float(p[-2]),
+                    'name': results.names[int(p[-1])]
+                }
+                for p in pred
+            ]
+
+            new_names = set([p['name'] for p in predicts])
+
+            print(f'{cno}-Detected 1', new_names)
+
+            # 检测是否有保存的之前结果这次是否还在
+            pre_names = list(self.prev_predicts_count.keys())
+            for name in pre_names:
+                if name in new_names:
+                    # 增加检测到的次数
+                    self.prev_predicts_count[name] += 1
+
+                    if self.prev_predicts_count[name] >= self.max_continous_predict:
+                        # 但是连续出现持续时间够长，还是要间隔一段时间报警一次
+                        self.prev_predicts_count[name] = 1
+                    else:
+                        # 如果最近短期内有报警过，就不再继续报警。
+                        new_names.discard(name)
+                else:
+                    # 如果旧的报警没有再次出现，就不再计数
+                    del self.prev_predicts_count[name]
+
+            # 新的报警增加计数
+            for name in new_names:
+                if name not in self.prev_predicts_count:
+                    self.prev_predicts_count[name] = 1
+
+            print(f'{cno}-Detected 2', new_names)
+
+            if new_names:
+                # 清掉不需要的报警
+                predicts = [p for p in predicts if p['name'] in new_names]
+                res = ImageClient(IMG_CMD_OBJECT_DETECTED, cno=cno, filename=filename, predicts=predicts).do_request(wait_result=False)
+                if res and res['code'] == IMG_CODE_SUCCESS:
+                    pass
+
+
 class ImageConsumeProcess(Process):
     def __init__(self, cno, raw_img_queue,
                  model_path=None,
@@ -82,12 +172,7 @@ class ImageConsumeProcess(Process):
         self.latest_img_interval = 1000  # In milliseconds
         self.predict_interval = 1000  # In milliseconds
         self.img_size = Array(ctypes.c_int, np.zeros((3, )).astype(int), lock=True)
-        self.model = None
-        self.model_path = model_path
-        self.model_device = model_device
-        self.predict_threshold = predict_threshold
-        self.max_continous_predict = max_continous_predict
-        self.prev_predicts_count = dict()  # 保存前面几次的预测结果，如果未超过max_continous_predict， 就不多次保存
+        self.model = DetectionModel(model_path, model_device, predict_threshold=predict_threshold, max_continous_predict=max_continous_predict)
 
     def set_params(self, latest_img_interval=None, predict_interval=None, predict_threshold=None):
         """
@@ -102,85 +187,10 @@ class ImageConsumeProcess(Process):
         if predict_threshold is not None:
             self.predict_threshold = predict_threshold
 
-    def init_model(self):
-        if self.model_path:
-            self.model = YOLOv5(self.model_path, device=self.model_device)
-
-    def predict_single_frame(self, raw_frame):
-        # 格式转变，BGRtoRGB
-        frame = cv.cvtColor(raw_frame, cv.COLOR_BGR2RGB)
-        # Results结构参考yolov5源代码Detections.(\yolov5\models\common.py)
-        results = self.model.predict(frame)
-
-        if len(results.pred[0]):
-            # 过滤掉小于threshold的结果
-            results.pred[0] = results.pred[0][results.pred[0][:, -2] >= self.predict_threshold]
-
-            pred = results.pred[0].numpy()
-            if pred.shape[0]:
-                filename = save_raw_frame(results.render()[0], cno=self.cno, cvt_color=False)
-
-                # 同一个类别只保留一个记录
-                classes = set()
-                remain_rows = []
-                for i in range(pred.shape[0]):
-                    if pred[i][-1] not in classes:
-                        classes.add(pred[i][-1])
-                        remain_rows.append(i)
-
-                pred = pred[remain_rows, :]
-
-                # 结果转换成便于处理的结果
-                predicts = [
-                    {
-                        'confidence': float(p[-2]),
-                        'name': results.names[int(p[-1])]
-                    }
-                    for p in pred
-                ]
-
-                new_names = set([p['name'] for p in predicts])
-
-                print(f'{self.cno}-Detected 1', new_names)
-
-                # 检测是否有保存的之前结果这次是否还在
-                pre_names = list(self.prev_predicts_count.keys())
-                for name in pre_names:
-                    if name in new_names:
-                        # 增加检测到的次数
-                        self.prev_predicts_count[name] += 1
-
-                        if self.prev_predicts_count[name] >= self.max_continous_predict:
-                            # 但是连续出现持续时间够长，还是要间隔一段时间报警一次
-                            self.prev_predicts_count[name] = 1
-                        else:
-                            # 如果最近短期内有报警过，就不再继续报警。
-                            new_names.discard(name)
-                    else:
-                        # 如果旧的报警没有再次出现，就不再计数
-                        del self.prev_predicts_count[name]
-
-                # 新的报警增加计数
-                for name in new_names:
-                    if name not in self.prev_predicts_count:
-                        self.prev_predicts_count[name] = 1
-
-                print(f'{self.cno}-Detected 2', new_names)
-
-                if new_names:
-                    # 清掉不需要的报警
-                    predicts = [p for p in predicts if p['name'] in new_names]
-                    res = ImageClient(IMG_CMD_OBJECT_DETECTED, cno=self.cno, filename=filename, predicts=predicts).do_request(wait_result=False)
-                    if res and res['code'] == IMG_CODE_SUCCESS:
-                        pass
-            else:
-                # 如果这次没有有效报警，那么清掉所有计数
-                self.prev_predicts_count.clear()
-
     # 在缓冲栈中读取数据:
     def process_loop(self):
         print('Process to read: %s' % os.getpid())
-        self.init_model()
+        self.model.init_model()
         # 开始时间
         t1 = time.time()  # 最新图片保存定时
         t2 = time.time()  # 预测定时
@@ -202,7 +212,7 @@ class ImageConsumeProcess(Process):
 
             if (time.time() - t2) * 1000 > self.predict_interval:
                 t2 = time.time()
-                self.predict_single_frame(frame)
+                self.model.predict_single_frame(frame, cno=self.cno)
 
             if (time.time() - t1) * 1000 > self.latest_img_interval:
                 t1 = time.time()
