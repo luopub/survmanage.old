@@ -79,9 +79,6 @@ class DetectionModel:
         self.model = None
         self.model_path = model_path
         self.model_device = model_device
-        self.predict_threshold = 0.5
-        self.max_continous_predict = 30
-        self.predicts_count = dict()  # 保存前面几次的预测结果，如果未超过max_continous_predict， 就不多次保存
         self.cas_queue = Queue(1)  # 接收传入参数
         self.cas = []  # ChannelAlgorithm parameters from, list of
 
@@ -99,6 +96,12 @@ class DetectionModel:
         try:
             # 检查是否有新参数
             cas = self.cas_queue.get_nowait()
+            # 添加一些键值，便于后续处理
+            for ca in cas:
+                # 上一次检测时间
+                ca['last_predict_time'] = time.time() - ca['analyze_interval'] / 1000  # 减去间隔以便能够立刻开始检测
+                # 上一次报警时间
+                ca['last_alert_time'] = time.time() - ca['alert_interval']  # 减去间隔以便能够立刻开始报警
             self.cas = cas
         except:
             pass
@@ -110,96 +113,79 @@ class DetectionModel:
         if not cas:
             return
 
-        # 过滤符合检测时间的参数，并且为新检测参数添加计时器
+        # 过滤符合检测时间的算法参数
         avail_cas = []
         for ca in cas:
-            if 'last_predict_time' not in ca:
-                ca['last_predict_time'] = time.time()
-            elif (time.time() - ca['last_predict_time']) * 1000 >= ca['analyze_interval']:
+            # 检测间隔足够并且报警间隔足够才往下执行
+            if time.time() - ca['last_alert_time'] < ca['alert_interval']:
+                continue
+            if (time.time() - ca['last_predict_time']) * 1000 >= ca['analyze_interval']:
                 ca['last_predict_time'] = time.time()
                 avail_cas.append(ca)
 
         if not avail_cas:
             return
-        
+
         # 格式转变，BGRtoRGB
         frame = cv.cvtColor(raw_frame, cv.COLOR_BGR2RGB)
         # Results结构参考yolov5源代码Detections.(\yolov5\models\common.py)
         results = self.model.predict(frame)
 
-        # 获取当前通道的预测计数
-        if cno not in self.predicts_count:
-            self.predicts_count[cno] = dict()
-
-        predicts_count = self.predicts_count[cno]
-
+        # 如果没有检测到任何分类，直接返回
         if len(results.pred[0]) == 0:
-            # 如果这次没有有效报警，那么清掉所有计数
-            predicts_count.clear()
             return
 
-        # 根据检测参数过滤检测结果
+        # 取得分类索引对应的阈值
+        thresholds = {results.names.index(ca['model_name']): ca['alert_threshold'] for ca in avail_cas}
 
         # 过滤掉小于threshold的结果
-        results.pred[0] = results.pred[0][results.pred[0][:, -2] >= self.predict_threshold]
-
+        index = []
         pred = results.pred[0].numpy()
-        if pred.shape[0]:
-            filename = save_raw_frame(results.render()[0], cno=cno, cvt_color=False)
+        for i in range(pred.shape[0]):
+            # 保留能识别并且阈值足够大的结果类别
+            class_index = pred[i, -1]
+            confidence = pred[i, -2]
+            if class_index in thresholds and confidence >= thresholds[class_index]:
+                index.append(i)
 
-            # 同一个类别只保留一个记录
-            classes = set()
-            remain_rows = []
-            for i in range(pred.shape[0]):
-                if pred[i][-1] not in classes:
-                    classes.add(pred[i][-1])
-                    remain_rows.append(i)
+        results.pred[0] = results.pred[0][index, :]
 
-            pred = pred[remain_rows, :]
+        pred = results.pred[0]
+        if not pred.shape[0]:
+            # 如果没有合适结果，直接返回
+            return
 
-            # 结果转换成便于处理的结果
-            predicts = [
-                {
-                    'confidence': float(p[-2]),
-                    'name': results.names[int(p[-1])]
-                }
-                for p in pred
-            ]
+        # 首先将识别结果图片生成
+        filename = save_raw_frame(results.render()[0], cno=cno, cvt_color=False)
 
-            new_names = set([p['name'] for p in predicts])
+        # 同一个类别只保留一个记录
+        classes = set()
+        remain_rows = []
+        for i in range(pred.shape[0]):
+            if pred[i, -1] not in classes:
+                classes.add(pred[i, -1])
+                remain_rows.append(i)
 
-            print(f'{cno}-Detected 1', new_names)
+        pred = pred[remain_rows, :]
 
-            # 检测是否有保存的之前结果这次是否还在
-            pre_names = list(predicts_count.keys())
-            for name in pre_names:
-                if name in new_names:
-                    # 增加检测到的次数
-                    predicts_count[name] += 1
+        predicts = [{
+            'confidence': float(p[-2]),
+            'name': results.names[int(p[-1])]
+        } for p in pred]
 
-                    if predicts_count[name] >= self.max_continous_predict:
-                        # 但是连续出现持续时间够长，还是要间隔一段时间报警一次
-                        predicts_count[name] = 1
-                    else:
-                        # 如果最近短期内有报警过，就不再继续报警。
-                        new_names.discard(name)
-                else:
-                    # 如果旧的报警没有再次出现，就不再计数
-                    del predicts_count[name]
+        # 设置最后报警时间
+        for p in pred:
+            for ca in avail_cas:
+                if results.names[int(p[-1])] == ca['model_name']:
+                    ca['last_alert_time'] = time.time()
+                    break
 
-            # 新的报警增加计数
-            for name in new_names:
-                if name not in predicts_count:
-                    predicts_count[name] = 1
+        print(f'{cno}-predicts', predicts)
 
-            print(f'{cno}-Detected 2', new_names)
-
-            if new_names:
-                # 清掉不需要的报警
-                predicts = [p for p in predicts if p['name'] in new_names]
-                res = ImageClient(IMG_CMD_OBJECT_DETECTED, cno=cno, filename=filename, predicts=predicts).do_request(wait_result=False)
-                if res and res['code'] == IMG_CODE_SUCCESS:
-                    pass
+        # 保存报警信息
+        res = ImageClient(IMG_CMD_OBJECT_DETECTED, cno=cno, filename=filename, predicts=predicts).do_request(wait_result=False)
+        if res and res['code'] == IMG_CODE_SUCCESS:
+            pass
 
 
 class ImageConsumeProcess(Process):

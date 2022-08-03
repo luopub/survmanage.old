@@ -118,7 +118,7 @@ class AlgorithmParametersMixin:
 class AlgorithmParametersBase(models.Model):
     analyze_interval = models.IntegerField(default=1000, verbose_name='分析问题(ms)')
     alert_interval = models.IntegerField(default=30, verbose_name='报警间隔')
-    alert_threshold = models.IntegerField(default=0.5, verbose_name='报警阈值')
+    alert_threshold = models.FloatField(default=0.5, verbose_name='报警阈值')
     # 每天报警时段打包成字符串：00:00-08:00;11:30-16:00;20:00-24:00
     # 每周的报警时段以json格式打包:
     """
