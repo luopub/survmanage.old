@@ -70,3 +70,25 @@ class ChannelAlgorithm(AlgorithmParametersBase):
     @staticmethod
     def encode_roi(left, top, width, height):
         return f'{left},{top},{width},{height}'
+
+    @classmethod
+    def get_cas_params(cls, cno):
+        cas = list(cls.objects.filter(channel__cno=cno).values(
+            'channel__cno',
+            'algorithm__name',
+            'analyze_interval',
+            'alert_interval',
+            'alert_threshold',
+            'alert_times',
+        ))
+
+        # 将算法名称映射成模型支持的名称
+        new_cas = []
+        for ca in cas:
+            model_name = Algorithm.map_alg_name_to_model_name(ca['algorithm__name'])
+            if model_name:
+                ca['model_name'] = model_name
+                new_cas.append(ca)
+
+        return new_cas
+

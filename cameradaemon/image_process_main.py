@@ -38,16 +38,9 @@ class ImageChannelsManager:
         # super(ImageChannelsManager, self).__init__(target=self.process_loop)
 
     def config_channels(self):
-        algorithms = Algorithm.objects.all().values()
-        # Convert to dict for easy operation below
-        algorithm_names = {a['id']: a['name'] for a in algorithms}
         for pp in self.process_pairs:
-            pass
-            cas = list(ChannelAlgorithm.objects.filter(channel__cno=pp.cno).values())
-            for c in cas:
-                c['algorithm_name'] = algorithm_names[c['algorithm_id']]
-
-            pp.pr.set_params(pp.cno, cas)
+            cas = ChannelAlgorithm.get_cas_params(pp.cno)
+            pp.pr.set_params(cas)
 
     def start_channels(self):
         for pp in self.process_pairs:

@@ -9,6 +9,106 @@ class Algorithm(models.Model):
     name = models.CharField(max_length=MAX_ALGORITHM_NAME_LEN, verbose_name='英文名称')
     name_ch = models.CharField(max_length=MAX_ALGORITHM_NAME_LEN, verbose_name='中文名称')
 
+    model_to_alg_name = {
+        'person': 'human',
+        'bicycle': '',
+        'car': 'vehicle',
+        'motorcycle': 'motor',
+        'airplane': '',
+        'bus': 'vehicle',
+        'train': '',
+        'truck': 'vehicle',
+        'boat': '',
+        'traffic light': '',
+        'fire hydrant': '',
+        'stop sign': '',
+        'parking meter': '',
+        'bench': '',
+        'bird': 'animal',
+        'cat': 'animal',
+        'dog': 'animal',
+        'horse': 'animal',
+        'sheep': 'animal',
+        'cow': 'animal',
+        'elephant': 'animal',
+        'bear': 'animal',
+        'zebra': 'animal',
+        'giraffe': 'animal',
+        'backpack': '',
+        'umbrella': '',
+        'handbag': '',
+        'tie': '',
+        'suitcase': '',
+        'frisbee': '',
+        'skis': '',
+        'snowboard': '',
+        'sports ball': '',
+        'kite': '',
+        'baseball bat': '',
+        'baseball glove': '',
+        'skateboard': '',
+        'surfboard': '',
+        'tennis racket': '',
+        'bottle': '',
+        'wine glass': '',
+        'cup': '',
+        'fork': '',
+        'knife': '',
+        'spoon': '',
+        'bowl': '',
+        'banana': '',
+        'apple': '',
+        'sandwich': '',
+        'orange': '',
+        'broccoli': '',
+        'carrot': '',
+        'hot dog': '',
+        'pizza': '',
+        'donut': '',
+        'cake': '',
+        'chair': '',
+        'couch': '',
+        'potted plant': '',
+        'bed': '',
+        'dining table': '',
+        'toilet': '',
+        'tv': '',
+        'laptop': '',
+        'mouse': '',
+        'remote': '',
+        'keyboard': '',
+        'cell phone': 'mobile',
+        'microwave': '',
+        'oven': '',
+        'toaster': '',
+        'sink': '',
+        'refrigerator': '',
+        'book': '',
+        'clock': '',
+        'vase': '',
+        'scissors': '',
+        'teddy bear': '',
+        'hair drier': '',
+        'toothbrush': '',
+    }
+    
+    @classmethod
+    def map_alg_name_to_model_name(cls, alg_name):
+        for k, v in cls.model_to_alg_name.items():
+            if v == alg_name:
+                return k
+
+    @classmethod
+    def get_algorithm_by_predict(cls, predict):
+        """
+        将预测结果类名转换成算法类名，并获取算法记录
+        """
+        alg_name = cls.model_to_alg_name.get(predict['name'])
+        try:
+            return Algorithm.objects.get(name=alg_name)
+        except Algorithm.DoesNotExist:
+            pass
+
 
 class AlgorithmParametersMixin:
     # No use!!! Only for normal running

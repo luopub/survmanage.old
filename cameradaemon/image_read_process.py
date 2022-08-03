@@ -81,27 +81,64 @@ class DetectionModel:
         self.model_device = model_device
         self.predict_threshold = 0.5
         self.max_continous_predict = 30
-        self.prev_predicts_count = dict()  # 保存前面几次的预测结果，如果未超过max_continous_predict， 就不多次保存
+        self.predicts_count = dict()  # 保存前面几次的预测结果，如果未超过max_continous_predict， 就不多次保存
+        self.cas_queue = Queue(1)  # 接收传入参数
+        self.cas = []  # ChannelAlgorithm parameters from, list of
 
     def init_model(self):
         if self.model_path:
             self.model = YOLOv5(self.model_path, device=self.model_device)
 
-    def set_params(self, cno, cas):
+    def set_params(self, cas):
         """
         配置通道算法，数据来源于数据表：ChannelAlgorithm
         """
-        pass
+        self.cas_queue.put(cas)
 
     def predict_single_frame(self, raw_frame, cno=0):
+        try:
+            # 检查是否有新参数
+            cas = self.cas_queue.get_nowait()
+            self.cas = cas
+        except:
+            pass
+
+        # 只选取指定通道的参数
+        cas = [ca for ca in self.cas if ca['channel__cno'] == cno]
+
+        # 如果当前通道没有检测参数，就不用检测
+        if not cas:
+            return
+
+        # 过滤符合检测时间的参数，并且为新检测参数添加计时器
+        avail_cas = []
+        for ca in cas:
+            if 'last_predict_time' not in ca:
+                ca['last_predict_time'] = time.time()
+            elif (time.time() - ca['last_predict_time']) * 1000 >= ca['analyze_interval']:
+                ca['last_predict_time'] = time.time()
+                avail_cas.append(ca)
+
+        if not avail_cas:
+            return
+        
         # 格式转变，BGRtoRGB
         frame = cv.cvtColor(raw_frame, cv.COLOR_BGR2RGB)
         # Results结构参考yolov5源代码Detections.(\yolov5\models\common.py)
         results = self.model.predict(frame)
 
+        # 获取当前通道的预测计数
+        if cno not in self.predicts_count:
+            self.predicts_count[cno] = dict()
+
+        predicts_count = self.predicts_count[cno]
+
         if len(results.pred[0]) == 0:
             # 如果这次没有有效报警，那么清掉所有计数
-            self.prev_predicts_count.clear()
+            predicts_count.clear()
+            return
+
+        # 根据检测参数过滤检测结果
 
         # 过滤掉小于threshold的结果
         results.pred[0] = results.pred[0][results.pred[0][:, -2] >= self.predict_threshold]
@@ -134,26 +171,26 @@ class DetectionModel:
             print(f'{cno}-Detected 1', new_names)
 
             # 检测是否有保存的之前结果这次是否还在
-            pre_names = list(self.prev_predicts_count.keys())
+            pre_names = list(predicts_count.keys())
             for name in pre_names:
                 if name in new_names:
                     # 增加检测到的次数
-                    self.prev_predicts_count[name] += 1
+                    predicts_count[name] += 1
 
-                    if self.prev_predicts_count[name] >= self.max_continous_predict:
+                    if predicts_count[name] >= self.max_continous_predict:
                         # 但是连续出现持续时间够长，还是要间隔一段时间报警一次
-                        self.prev_predicts_count[name] = 1
+                        predicts_count[name] = 1
                     else:
                         # 如果最近短期内有报警过，就不再继续报警。
                         new_names.discard(name)
                 else:
                     # 如果旧的报警没有再次出现，就不再计数
-                    del self.prev_predicts_count[name]
+                    del predicts_count[name]
 
             # 新的报警增加计数
             for name in new_names:
-                if name not in self.prev_predicts_count:
-                    self.prev_predicts_count[name] = 1
+                if name not in predicts_count:
+                    predicts_count[name] = 1
 
             print(f'{cno}-Detected 2', new_names)
 
@@ -175,11 +212,11 @@ class ImageConsumeProcess(Process):
         self.img_size = Array(ctypes.c_int, np.zeros((3, )).astype(int), lock=True)
         self.model = DetectionModel(model_path, model_device)
 
-    def set_params(self, cno, cas):
+    def set_params(self, cas):
         """
         设置参数, 这些原子数据类型不用同步类型
         """
-        self.model.set_params(cno, cas)
+        self.model.set_params(cas)
 
     # 在缓冲栈中读取数据:
     def process_loop(self):
