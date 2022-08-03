@@ -12,6 +12,13 @@ from .image_server_code import *
 from .utils import save_raw_frame
 
 
+DEFAULT_DETECT_TICK = 500  # 默认检测500毫秒为单位
+DEFAULT_LATEST_IMAGE_INTERVAL = 1000  # 默认保存最新图片间隔
+MAX_IMAGE_WIDTH = 1920
+MAX_IMAGE_HEIGHT = 1080
+DEFAULT_IMAGE_DEPTH = 3
+
+
 class ImageStreamProcess(Process):
     def __init__(self, camera):
         super(ImageStreamProcess, self).__init__(target=self.process_loop)
@@ -80,7 +87,10 @@ class DetectionModel:
         if self.model_path:
             self.model = YOLOv5(self.model_path, device=self.model_device)
 
-    def set_params(self, **kwargs):
+    def set_params(self, cno, cas):
+        """
+        配置通道算法，数据来源于数据表：ChannelAlgorithm
+        """
         pass
 
     def predict_single_frame(self, raw_frame, cno=0):
@@ -156,32 +166,20 @@ class DetectionModel:
 
 
 class ImageConsumeProcess(Process):
-    def __init__(self, cno, raw_img_queue,
-                 model_path=None,
-                 model_device=None
-                 ):
+    def __init__(self, cno, raw_img_queue, model_path=None, model_device=None):
         super(ImageConsumeProcess, self).__init__(target=self.process_loop)
         self.cno = cno
         self.raw_img_queue = raw_img_queue
         # 分配一个足够大的buffer暂存最后一张图片
-        self.latest_img = Array(ctypes.c_int, np.zeros((1280*1280*3, ), dtype=np.uint8), lock=True)
-        self.latest_img_interval = 1000  # In milliseconds
-        self.predict_interval = 1000  # In milliseconds
+        self.latest_img = Array(ctypes.c_int, np.zeros((MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT*DEFAULT_IMAGE_DEPTH, ), dtype=np.uint8), lock=True)
         self.img_size = Array(ctypes.c_int, np.zeros((3, )).astype(int), lock=True)
         self.model = DetectionModel(model_path, model_device)
 
-    def set_params(self, latest_img_interval=None, predict_interval=None, predict_threshold=None):
+    def set_params(self, cno, cas):
         """
         设置参数, 这些原子数据类型不用同步类型
         """
-        if latest_img_interval is not None:
-            self.latest_img_interval = latest_img_interval
-
-        if predict_interval is not None:
-            self.predict_interval = predict_interval
-
-        if predict_threshold is not None:
-            self.predict_threshold = predict_threshold
+        self.model.set_params(cno, cas)
 
     # 在缓冲栈中读取数据:
     def process_loop(self):
@@ -206,11 +204,11 @@ class ImageConsumeProcess(Process):
             # frame = Image.fromarray(np.uint8(frame))
             frame = value
 
-            if (time.time() - t2) * 1000 > self.predict_interval:
+            if (time.time() - t2) * 1000 > DEFAULT_DETECT_TICK:
                 t2 = time.time()
                 self.model.predict_single_frame(frame, cno=self.cno)
 
-            if (time.time() - t1) * 1000 > self.latest_img_interval:
+            if (time.time() - t1) * 1000 > DEFAULT_LATEST_IMAGE_INTERVAL:
                 t1 = time.time()
 
                 # print("raw_img_queue length", self.raw_img_queue.qsize(), frame_count)

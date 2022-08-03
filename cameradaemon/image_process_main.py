@@ -4,7 +4,8 @@ import ctypes
 import json
 from django.conf import settings
 
-from channel.models import Channel
+from algorithm.models import Algorithm
+from channel.models import Channel, ChannelAlgorithm
 from alert.models import Alert
 
 from .image_read_process import ImageStreamProcess, ImageConsumeProcess
@@ -18,13 +19,11 @@ class ImageProcessPair:
         self.cno = cno
         self.camera = camera
         self.raw_img_queue = None
-        self.pw = None
-        self.pr = None
+        self.pw = ImageStreamProcess(self.camera)
+        self.pr = ImageConsumeProcess(self.cno, self.pw.raw_img_queue, model_path=settings.MODEL_PATH, model_device=settings.MODEL_DEVICE)
 
     def start(self):
         # pw = Process(target=write, args=(q, rtsp_url, queue_size))
-        self.pw = ImageStreamProcess(self.camera)
-        self.pr = ImageConsumeProcess(self.cno, self.pw.raw_img_queue, model_path=settings.MODEL_PATH, model_device=settings.MODEL_DEVICE)
         # 启动子进程pw，写入:
         self.pw.start()
         # 启动子进程pr，读取:
@@ -37,6 +36,18 @@ class ImageChannelsManager:
         self.channels_num = channels_num
         self.process_pairs = [ImageProcessPair(c+1, '') for c in range(self.channels_num)]
         # super(ImageChannelsManager, self).__init__(target=self.process_loop)
+
+    def config_channels(self):
+        algorithms = Algorithm.objects.all().values()
+        # Convert to dict for easy operation below
+        algorithm_names = {a['id']: a['name'] for a in algorithms}
+        for pp in self.process_pairs:
+            pass
+            cas = list(ChannelAlgorithm.objects.filter(channel__cno=pp.cno).values())
+            for c in cas:
+                c['algorithm_name'] = algorithm_names[c['algorithm_id']]
+
+            pp.pr.set_params(pp.cno, cas)
 
     def start_channels(self):
         for pp in self.process_pairs:
@@ -106,6 +117,8 @@ class ImageChannelsManager:
         return res
 
     def main_loop(self):
+        self.config_channels()
+
         self.start_channels()
 
         time.sleep(5)
