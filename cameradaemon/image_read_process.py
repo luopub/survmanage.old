@@ -68,22 +68,20 @@ class ImageStreamProcess(Process):
 
 
 class DetectionModel:
-    def __init__(self,
-                 model_path,
-                 model_device,
-                 predict_threshold=0.5,
-                 max_continous_predict=10
-                 ):
+    def __init__(self, model_path, model_device):
         self.model = None
         self.model_path = model_path
         self.model_device = model_device
-        self.predict_threshold = predict_threshold
-        self.max_continous_predict = max_continous_predict
+        self.predict_threshold = 0.5
+        self.max_continous_predict = 30
         self.prev_predicts_count = dict()  # 保存前面几次的预测结果，如果未超过max_continous_predict， 就不多次保存
 
     def init_model(self):
         if self.model_path:
             self.model = YOLOv5(self.model_path, device=self.model_device)
+
+    def set_params(self, **kwargs):
+        pass
 
     def predict_single_frame(self, raw_frame, cno=0):
         # 格式转变，BGRtoRGB
@@ -160,9 +158,7 @@ class DetectionModel:
 class ImageConsumeProcess(Process):
     def __init__(self, cno, raw_img_queue,
                  model_path=None,
-                 model_device=None,
-                 predict_threshold=0.5,
-                 max_continous_predict=10
+                 model_device=None
                  ):
         super(ImageConsumeProcess, self).__init__(target=self.process_loop)
         self.cno = cno
@@ -172,7 +168,7 @@ class ImageConsumeProcess(Process):
         self.latest_img_interval = 1000  # In milliseconds
         self.predict_interval = 1000  # In milliseconds
         self.img_size = Array(ctypes.c_int, np.zeros((3, )).astype(int), lock=True)
-        self.model = DetectionModel(model_path, model_device, predict_threshold=predict_threshold, max_continous_predict=max_continous_predict)
+        self.model = DetectionModel(model_path, model_device)
 
     def set_params(self, latest_img_interval=None, predict_interval=None, predict_threshold=None):
         """
