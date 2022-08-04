@@ -105,6 +105,17 @@ class ImageChannelsManager:
                     'code': IMG_CODE_SUCCESS,
                     'data': {}
                 }
+            elif cmd == IMG_CMD_CHANNEL_ALG_CHANGED:
+                cno = data['data']['cno']
+                for pp in self.process_pairs:
+                    if pp.cno == cno:
+                        cas = ChannelAlgorithm.get_cas_params(pp.cno)
+                        pp.pr.set_params(cas)
+                        break
+                res = {
+                    'code': IMG_CODE_SUCCESS,
+                    'data': {}
+                }
         except:
             pass
         return res

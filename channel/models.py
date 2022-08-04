@@ -1,8 +1,11 @@
+import json
 from django.db import models
 
 from algorithm.models import Algorithm, AlgorithmParametersBase
 
 from utils.utils import values_list_to_list
+from cameradaemon.image_client import ImageClient
+from cameradaemon.image_server_code import *
 
 MAX_CHANNEL_NUM = 8
 
@@ -43,6 +46,8 @@ class Channel(models.Model):
                     'alert_threshold': v.get('alert_threshold'),
                     'alert_times': v.get('alert_times')
                 })
+        # 通知后台程序
+        ImageClient(IMG_CMD_CHANNEL_ALG_CHANGED, cno=self.cno).do_request(wait_result=False)
 
 
 class ChannelAlgorithm(AlgorithmParametersBase):
@@ -82,13 +87,20 @@ class ChannelAlgorithm(AlgorithmParametersBase):
             'alert_times',
         ))
 
-        # 将算法名称映射成模型支持的名称
         new_cas = []
         for ca in cas:
+            # 将算法名称映射成模型支持的名称，如果是模型不支持的算法，就忽略掉
             model_name = Algorithm.map_alg_name_to_model_name(ca['algorithm__name'])
-            if model_name:
-                ca['model_name'] = model_name
-                new_cas.append(ca)
+            if not model_name:
+                continue
+
+            ca['model_name'] = model_name
+
+            # 将alert_times解码
+            if ca['alert_times']:
+                ca['alert_times'] = json.loads(ca['alert_times'])
+
+            new_cas.append(ca)
 
         return new_cas
 

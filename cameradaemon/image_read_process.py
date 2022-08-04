@@ -92,6 +92,24 @@ class DetectionModel:
         """
         self.cas_queue.put(cas)
 
+    @staticmethod
+    def time_in_alert_times(alert_times, local_time=None):
+        """
+        检测local_time是否在alert_times范围内
+        """
+        if not local_time:
+            local_time = time.localtime()
+        this_day = alert_times[local_time.tm_wday]
+        if not this_day['enabled'] or not this_day['segs']:
+            return False
+        minutes = local_time.tm_hour * 60 + local_time.tm_min
+        for s in this_day['segs']:
+            if s[0] <= minutes < s[1]:
+                return True
+            if minutes < s[0]:
+                return False
+        return False
+
     def predict_single_frame(self, raw_frame, cno=0):
         try:
             # 检查是否有新参数
@@ -116,9 +134,15 @@ class DetectionModel:
         # 过滤符合检测时间的算法参数
         avail_cas = []
         for ca in cas:
-            # 检测间隔足够并且报警间隔足够才往下执行
+            # 当前时间在布控时间范围才需要检测
+            if not ca['alert_times']:
+                continue
+            if not self.time_in_alert_times(ca['alert_times']):
+                continue
+            # 报警间隔足够才往下执行
             if time.time() - ca['last_alert_time'] < ca['alert_interval']:
                 continue
+            # 检测间隔足够就可以检测一次
             if (time.time() - ca['last_predict_time']) * 1000 >= ca['analyze_interval']:
                 ca['last_predict_time'] = time.time()
                 avail_cas.append(ca)
@@ -183,9 +207,7 @@ class DetectionModel:
         print(f'{cno}-predicts', predicts)
 
         # 保存报警信息
-        res = ImageClient(IMG_CMD_OBJECT_DETECTED, cno=cno, filename=filename, predicts=predicts).do_request(wait_result=False)
-        if res and res['code'] == IMG_CODE_SUCCESS:
-            pass
+        ImageClient(IMG_CMD_OBJECT_DETECTED, cno=cno, filename=filename, predicts=predicts).do_request(wait_result=False)
 
 
 class ImageConsumeProcess(Process):
