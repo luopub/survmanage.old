@@ -97,17 +97,23 @@ class DetectionModel:
         """
         检测local_time是否在alert_times范围内
         """
+        if not alert_times:
+            return False
+
         if not local_time:
             local_time = time.localtime()
+
         this_day = alert_times[local_time.tm_wday]
         if not this_day['enabled'] or not this_day['segs']:
             return False
+
         minutes = local_time.tm_hour * 60 + local_time.tm_min
         for s in this_day['segs']:
             if s[0] <= minutes < s[1]:
                 return True
             if minutes < s[0]:
                 return False
+
         return False
 
     def predict_single_frame(self, raw_frame, cno=0):
@@ -135,8 +141,6 @@ class DetectionModel:
         avail_cas = []
         for ca in cas:
             # 当前时间在布控时间范围才需要检测
-            if not ca['alert_times']:
-                continue
             if not self.time_in_alert_times(ca['alert_times']):
                 continue
             # 报警间隔足够才往下执行
