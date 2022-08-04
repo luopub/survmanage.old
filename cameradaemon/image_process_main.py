@@ -116,6 +116,20 @@ class ImageChannelsManager:
                     'code': IMG_CODE_SUCCESS,
                     'data': {}
                 }
+            elif cmd == IMG_CMD_CHANNEL_CONFIGURED:
+                cno = data['data']['cno']
+                for pp in self.process_pairs:
+                    if pp.cno == cno:
+                        try:
+                            channel = Channel.objects.get(cno=cno)
+                            pp.pw.change_camera(channel.url)
+                        except Channel.DoesNotExist:
+                            pass
+                        break
+                res = {
+                    'code': IMG_CODE_SUCCESS,
+                    'data': {}
+                }
         except:
             pass
         return res

@@ -1,5 +1,7 @@
 import json
 from django.db import models
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from algorithm.models import Algorithm, AlgorithmParametersBase
 
@@ -48,6 +50,11 @@ class Channel(models.Model):
                 })
         # 通知后台程序
         ImageClient(IMG_CMD_CHANNEL_ALG_CHANGED, cno=self.cno).do_request(wait_result=False)
+
+
+@receiver(post_save, sender=Channel)
+def on_channel_post_save(sender, **kwargs):
+    ImageClient(IMG_CMD_CHANNEL_CONFIGURED, cno=kwargs['instance'].cno).do_request(wait_result=False)
 
 
 class ChannelAlgorithm(AlgorithmParametersBase):

@@ -19,7 +19,7 @@ class ImageClient:
                 }
                 sock.sendall(json.dumps(data).encode('utf8'))
 
-                print("Sent:     {}".format(data))
+                print("Sent to server: {}".format(data))
 
                 if wait_result:
                     # Receive data from the server and shut down

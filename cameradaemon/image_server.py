@@ -11,10 +11,9 @@ class ImageServerHandler(socketserver.BaseRequestHandler):
         # self.request is the TCP socket connected to the client
         data = self.request.recv(1024).strip()
         if data:
-            print("{} wrote:".format(self.client_address[0]))
-
             data = json.loads(data.decode('utf8'))
-            print(data)
+
+            print("{} request received:".format(self.client_address[0]), data)
 
             res = self.server.handler(data)
 

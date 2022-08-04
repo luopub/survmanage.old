@@ -44,6 +44,7 @@ class ImageStreamProcess(Process):
                 # If continuous fail, then the camera may be off line
                 fail_count = 0
                 frame_count = 0
+                t1 = time.time()
                 while True:
                     rv, img = cap.read()
                     if not rv:
@@ -62,7 +63,8 @@ class ImageStreamProcess(Process):
 
                     frame_count += 1
 
-                    if frame_count % 25 == 0:
+                    if time.time() - t1 >= 1:
+                        t1 = time.time()
                         # 隔段时间检测是否改变了地址
                         if camera != self.camera.value:
                             break
