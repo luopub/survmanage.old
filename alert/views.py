@@ -2,6 +2,7 @@ from rest_framework import routers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
+from django.db.models.functions.datetime import TruncHour
 
 from algorithm.models import Algorithm
 from channel.models import Channel
@@ -57,6 +58,9 @@ class AlertViewFilter2(filters.FilterSet):
 
 
 class AlertViewSet2(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
+    queryset = Alert.objects.all().annotate(
+        hour=TruncHour('date_time')
+    )
     model = Alert
     filterset_class = AlertViewFilter2
 
