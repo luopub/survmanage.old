@@ -46,7 +46,8 @@ class Channel(models.Model):
                     'analyze_interval': v.get('analyze_interval'),
                     'alert_interval': v.get('alert_interval'),
                     'alert_threshold': v.get('alert_threshold'),
-                    'alert_times': v.get('alert_times')
+                    'alert_times': v.get('alert_times'),
+                    'roi_region': v.get('roi_region')
                 })
         # 通知后台程序
         ImageClient(IMG_CMD_CHANNEL_ALG_CHANGED, cno=self.cno).do_request(wait_result=False)
@@ -60,8 +61,8 @@ def on_channel_post_save(sender, **kwargs):
 class ChannelAlgorithm(AlgorithmParametersBase):
     channel = models.ForeignKey(Channel, on_delete=models.CASCADE, verbose_name='通道')
     algorithm = models.ForeignKey(Algorithm, on_delete=models.CASCADE, verbose_name='算法')
-    # Comma seperated integers left, top, width, height
-    roi_region = models.CharField(max_length=20, null=True, verbose_name='ROI矩形区')
+    # json format boxes list
+    roi_region = models.CharField(max_length=1024, null=True, verbose_name='ROI矩形区')
 
     class Meta:
         unique_together = (('channel', 'algorithm'),)
