@@ -118,6 +118,28 @@ class DetectionModel:
 
         return False
 
+    @staticmethod
+    def rect_intersect(r1, r2):
+        """
+        判断两个矩形是否相交。
+        如果相交，两个矩形的最小外接矩形的宽度和高度都小于两个矩形独自宽度和高度之和
+        """
+        return (max(r1[2], r2[2]) - min(r1[0], r2[0]) < r1[2] - r1[0] + r2[2] - r2[0]
+            and max(r1[3], r2[3]) - min(r1[1], r2[1]) < r1[3] - r1[1] + r2[3] - r2[1])
+
+    @classmethod
+    def pred_in_roi_region(cls, roi_region, pred):
+        """
+        如果没有roi区域，认为是全域检测
+        """
+        if not roi_region:
+            return True
+        for r in roi_region:
+            if cls.rect_intersect([r['x1'], r['y1'], r['x2'], r['y2']], pred):
+                return True
+
+        return False
+
     def predict_single_frame(self, raw_frame, cno=0):
         try:
             # 检查是否有新参数
@@ -165,17 +187,19 @@ class DetectionModel:
         if len(results.pred[0]) == 0:
             return
 
-        # 取得分类索引对应的阈值
-        thresholds = {results.names.index(ca['model_name']): ca['alert_threshold'] for ca in avail_cas}
+        # 取得分类索引对应的阈值和roi区域
+        class_index = results.names.index(ca['model_name'])
+        thresholds = {class_index: ca['alert_threshold'] for ca in avail_cas}
+        regions = {class_index: ca['roi_region'] for ca in avail_cas}
 
-        # 过滤掉小于threshold的结果
+        # 过滤掉小于threshold或者不在roi_region的结果
         index = []
         pred = results.pred[0].numpy()
         for i in range(pred.shape[0]):
             # 保留能识别并且阈值足够大的结果类别
             class_index = pred[i, -1]
             confidence = pred[i, -2]
-            if class_index in thresholds and confidence >= thresholds[class_index]:
+            if class_index in thresholds and confidence >= thresholds[class_index] and self.pred_in_roi_region(regions[class_index], pred):
                 index.append(i)
 
         results.pred[0] = results.pred[0][index, :]

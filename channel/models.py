@@ -93,6 +93,7 @@ class ChannelAlgorithm(AlgorithmParametersBase):
             'alert_interval',
             'alert_threshold',
             'alert_times',
+            'roi_region'
         ))
 
         new_cas = []
@@ -107,6 +108,10 @@ class ChannelAlgorithm(AlgorithmParametersBase):
             # 将alert_times解码
             if ca['alert_times']:
                 ca['alert_times'] = json.loads(ca['alert_times'])
+
+            # 将roi_region解码
+            if ca['roi_region']:
+                ca['roi_region'] = json.loads(ca['roi_region'])
 
             new_cas.append(ca)
 
