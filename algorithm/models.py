@@ -134,3 +134,10 @@ class AlgorithmParametersBase(models.Model):
 
     class Meta:
         abstract = True
+
+
+class AlgorithmDefaultParameters(AlgorithmParametersBase):
+    """
+    This saves only one record
+    """
+    pass
