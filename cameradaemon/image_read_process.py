@@ -188,9 +188,8 @@ class DetectionModel:
             return
 
         # 取得分类索引对应的阈值和roi区域
-        class_index = results.names.index(ca['model_name'])
-        thresholds = {class_index: ca['alert_threshold'] for ca in avail_cas}
-        regions = {class_index: ca['roi_region'] for ca in avail_cas}
+        thresholds = {results.names.index(ca['model_name']): ca['alert_threshold'] for ca in avail_cas}
+        regions = {results.names.index(ca['model_name']): ca['roi_region'] for ca in avail_cas}
 
         # 过滤掉小于threshold或者不在roi_region的结果
         index = []
@@ -199,7 +198,7 @@ class DetectionModel:
             # 保留能识别并且阈值足够大的结果类别
             class_index = pred[i, -1]
             confidence = pred[i, -2]
-            if class_index in thresholds and confidence >= thresholds[class_index] and self.pred_in_roi_region(regions[class_index], pred):
+            if class_index in thresholds and confidence >= thresholds[class_index] and self.pred_in_roi_region(regions[class_index], pred[i]):
                 index.append(i)
 
         results.pred[0] = results.pred[0][index, :]
