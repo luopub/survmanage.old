@@ -10,9 +10,11 @@ from utils.rest_mixins import GroupbyMixin
 from utils.rest_utils import MyModelViewSet, SimpleViewSetBase
 from utils.utils import get_filter_for_all_fields
 
-from .models import Alert
 from cameradaemon.image_client import ImageClient
 from cameradaemon.image_server_code import *
+from utils.image_clear_thread import image_clear_thread
+
+from .models import Alert
 
 
 class AlertViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
@@ -34,6 +36,7 @@ class AlertViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
             res = ImageClient(IMG_CMD_GET_LATEST_IMAGE, cno=cno).do_request()
             if res and res['code'] == IMG_CODE_SUCCESS:
                 cno_images[cno] = res['data']['filename']
+                image_clear_thread.put_image(res['data']['filename'])
 
         # 将图片与alert id对应
         images = {}

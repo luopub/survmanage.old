@@ -7,6 +7,7 @@ from utils.rest_mixins import GroupbyMixin
 from utils.rest_utils import MyModelViewSet, SimpleViewSetBase
 from cameradaemon.image_client import ImageClient
 from cameradaemon.image_server_code import *
+from utils.image_clear_thread import image_clear_thread
 
 from .models import Channel, ChannelAlgorithm
 
@@ -46,6 +47,7 @@ class ChannelViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
 
         res = ImageClient(IMG_CMD_GET_LATEST_IMAGE, cno=channel.cno).do_request()
         if res and res['code'] == IMG_CODE_SUCCESS:
+            image_clear_thread.put_image(res['data']['filename'])
             return Response({'filename': res['data']['filename']})
         else:
             return Response({})
