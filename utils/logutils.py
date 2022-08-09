@@ -12,7 +12,9 @@ simple_format = '[%(levelname)s][%(asctime)s][%(filename)s:%(lineno)d]%(message)
 id_simple_format = '[%(levelname)s][%(asctime)s] %(message)s'
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-logfile_dir = os.path.join(BASE_DIR, 'loggings')
+# In case two run-time collides with same loggine file name, we define another name.
+logging_name = os.environ.get('LOGGING_NAME', 'loggings')
+logfile_dir = os.path.join(BASE_DIR, logging_name)
 
 if not os.path.exists(logfile_dir):
     os.mkdir(logfile_dir, mode=666)

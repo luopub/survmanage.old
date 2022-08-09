@@ -140,6 +140,20 @@ class DetectionModel:
 
         return False
 
+    def addRoiRegion(self, results, regions, index):
+        colors = [
+            [128, 0, 0],
+            [0, 128, 0],
+            [0, 0, 128]
+        ]
+        for i in index:
+            if not regions[i]:
+                continue
+            for r in regions[i]:
+                blk = np.zeros(results.imgs[0].shape, np.uint8)
+                cv.rectangle(blk, [r['x1'], r['y1']], [r['x2'], r['y2']], colors[i % len(colors)], cv.LINE_4)
+                results.imgs[0] = cv.addWeighted(results.imgs[0], 1.0, blk, 0.2, 1)
+
     def predict_single_frame(self, raw_frame, cno=0):
         try:
             # 检查是否有新参数
@@ -207,6 +221,8 @@ class DetectionModel:
         if not pred.shape[0]:
             # 如果没有合适结果，直接返回
             return
+
+        self.addRoiRegion(results, regions, index)
 
         # 首先将识别结果图片生成
         filename = save_raw_frame(results.render()[0], cno=cno, cvt_color=False)
