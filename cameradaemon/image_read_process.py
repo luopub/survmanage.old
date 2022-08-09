@@ -142,8 +142,8 @@ class DetectionModel:
 
     def addRoiRegion(self, results, regions, index):
         colors = [
-            [128, 0, 0],
-            [0, 128, 0],
+            # [128, 0, 0],
+            # [0, 128, 0],
             [0, 0, 128]
         ]
         for i in index:
@@ -151,8 +151,8 @@ class DetectionModel:
                 continue
             for r in regions[i]:
                 blk = np.zeros(results.imgs[0].shape, np.uint8)
-                cv.rectangle(blk, [r['x1'], r['y1']], [r['x2'], r['y2']], colors[i % len(colors)], cv.LINE_4)
-                results.imgs[0] = cv.addWeighted(results.imgs[0], 1.0, blk, 0.2, 1)
+                cv.rectangle(blk, [r['x1'], r['y1']], [r['x2'], r['y2']], colors[i % len(colors)], -1)
+                results.imgs[0] = cv.addWeighted(results.imgs[0], 1.0, blk, 0.4, 1)
 
     def predict_single_frame(self, raw_frame, cno=0):
         try:
@@ -222,10 +222,12 @@ class DetectionModel:
             # 如果没有合适结果，直接返回
             return
 
-        self.addRoiRegion(results, regions, index)
+        # 首先保存未标注的图片
+        img_unmark = save_raw_frame(results.imgs[0], cno=cno, cvt_color=False)
 
+        self.addRoiRegion(results, regions, index)
         # 首先将识别结果图片生成
-        filename = save_raw_frame(results.render()[0], cno=cno, cvt_color=False)
+        img = save_raw_frame(results.render()[0], cno=cno, cvt_color=False)
 
         # 同一个类别只保留一个记录
         classes = set()
@@ -252,7 +254,7 @@ class DetectionModel:
         print(f'{cno}-predicts', predicts)
 
         # 保存报警信息
-        ImageClient(IMG_CMD_OBJECT_DETECTED, cno=cno, filename=filename, predicts=predicts).do_request(wait_result=False)
+        ImageClient(IMG_CMD_OBJECT_DETECTED, cno=cno, img_unmark=img_unmark, img=img, predicts=predicts).do_request(wait_result=False)
 
 
 class ImageConsumeProcess(Process):

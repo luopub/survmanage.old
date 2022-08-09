@@ -98,9 +98,10 @@ class ImageChannelsManager:
                 }
             elif cmd == IMG_CMD_OBJECT_DETECTED:
                 cno = data['data']['cno']
-                filename = data['data']['filename']
+                img = data['data']['img']
+                img_unmark = data['data']['img_unmark']
                 predicts = data['data']['predicts']
-                Alert.add_alerts(cno=cno, filename=filename, predicts=predicts)
+                Alert.add_alerts(cno=cno, img_unmark=img_unmark, img=img, predicts=predicts)
                 res = {
                     'code': IMG_CODE_SUCCESS,
                     'data': {}
