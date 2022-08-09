@@ -1,6 +1,6 @@
 import os
 import time
-from threading import Thread, Event, Semaphore
+from threading import Thread, Semaphore
 
 from django.conf import settings
 
@@ -12,17 +12,15 @@ class ImageClearThread(Thread):
     def __init__(self):
         super(ImageClearThread, self).__init__(target=self.loop)
         self.images = set()
-        self.event = Event()
         self.semaphore = Semaphore()
 
-    def put_image(self, image, time_to_clear=30):
+    def put_image(self, image, time_to_clear=300):
         with self.semaphore:
             self.images.add((image, time_to_clear, time.time()))
-            self.event.set()
 
     def loop(self):
         while True:
-            self.event.wait(timeout=5)
+            time.sleep(60)
             with self.semaphore:
                 deleted = []
                 for item in self.images:
@@ -36,7 +34,6 @@ class ImageClearThread(Thread):
                         deleted.append(item)
                 for item in deleted:
                     self.images.remove(item)
-                self.event.clear()
 
 
 print('ImageClearThread Inited')
