@@ -28,8 +28,17 @@ class ChannelViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     @action(detail=False, methods=['get'])
     def get_real_time_status(self, request):
         channel_ids = request.GET.get('channel_ids').split(',')
-        images = {id_: (int(id_) % 2 == 0) for id_ in channel_ids}
-        return Response(images)
+        id_cnos = self.model.objects.filter(id__in=channel_ids).values_list('id', 'cno')
+        status = {}
+        for id_cno in id_cnos:
+            id_ = id_cno[0]
+            cno = id_cno[1]
+            res = ImageClient(IMG_CMD_CHANNEL_GET_ONLINE, cno=cno).do_request()
+            if res and res['code'] == IMG_CODE_SUCCESS:
+                status[id_] = res['data']['online']
+            else:
+                status[id_] = False
+        return Response(status)
 
     @action(detail=True, methods=['get'])
     def get_real_time_image(self, request, pk):

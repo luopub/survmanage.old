@@ -141,17 +141,19 @@ class DetectionModel:
         return False
 
     def addRoiRegion(self, results, regions, index):
-        colors = [
-            # [128, 0, 0],
-            # [0, 128, 0],
-            [0, 0, 128]
-        ]
+        """
+        Add ROI regions on picture
+        results: results from model prediction
+        regions: dict of regions, indexed by class index
+        index: class index
+        """
+        color = [0, 0, 128]
         for i in index:
             if not regions[i]:
                 continue
             for r in regions[i]:
                 blk = np.zeros(results.imgs[0].shape, np.uint8)
-                cv.rectangle(blk, [r['x1'], r['y1']], [r['x2'], r['y2']], colors[i % len(colors)], -1)
+                cv.rectangle(blk, [r['x1'], r['y1']], [r['x2'], r['y2']], color, -1)
                 results.imgs[0] = cv.addWeighted(results.imgs[0], 1.0, blk, 0.4, 1)
 
     def predict_single_frame(self, raw_frame, cno=0):
@@ -207,6 +209,7 @@ class DetectionModel:
 
         # 过滤掉小于threshold或者不在roi_region的结果
         index = []
+        class_indexes = []
         pred = results.pred[0].numpy()
         for i in range(pred.shape[0]):
             # 保留能识别并且阈值足够大的结果类别
@@ -214,6 +217,7 @@ class DetectionModel:
             confidence = pred[i, -2]
             if class_index in thresholds and confidence >= thresholds[class_index] and self.pred_in_roi_region(regions[class_index], pred[i]):
                 index.append(i)
+                class_indexes.append(class_index)
 
         results.pred[0] = results.pred[0][index, :]
 
@@ -225,7 +229,7 @@ class DetectionModel:
         # 首先保存未标注的图片
         img_unmark = save_raw_frame(results.imgs[0], cno=cno, cvt_color=False)
 
-        self.addRoiRegion(results, regions, index)
+        self.addRoiRegion(results, regions, class_indexes)
         # 首先将识别结果图片生成
         img = save_raw_frame(results.render()[0], cno=cno, cvt_color=False)
 

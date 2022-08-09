@@ -60,10 +60,26 @@ class ImageChannelsManager:
     def set_channel_algorithms(self):
         pass
 
-    def get_latest_image(self, cno):
-        frame = self.process_pairs[cno - 1].pr.get_latest_image()
+    def get_latest_image(self, pp):
+        frame = pp.pr.get_latest_image()
 
-        return save_raw_frame(frame, cno=cno)
+        return save_raw_frame(frame, cno=pp.cno)
+
+    def get_pp_from_cmd(self, data):
+        """
+        Get cno and pp and result if not valid cno
+        """
+        cno = data['data']['cno']
+        pps = list(filter(lambda x: x.cno == cno, self.process_pairs))
+        res = None
+        if pps:
+            pp = pps[0]
+        else:
+            res = {
+                'code': IMG_CODE_CHANNEL_NOT_FOUND,
+                'data': {}
+            }
+        return cno, pp, res
 
     def handlers(self, data):
         """
@@ -88,15 +104,7 @@ class ImageChannelsManager:
         }
         try:
             cmd = data['cmd']
-            if cmd == IMG_CMD_GET_LATEST_IMAGE:
-                cno = data['data']['cno']
-                res = {
-                    'code': IMG_CODE_SUCCESS,
-                    'data': {
-                        'filename': self.get_latest_image(cno)
-                    }
-                }
-            elif cmd == IMG_CMD_OBJECT_DETECTED:
+            if cmd == IMG_CMD_OBJECT_DETECTED:
                 cno = data['data']['cno']
                 img = data['data']['img']
                 img_unmark = data['data']['img_unmark']
@@ -106,31 +114,46 @@ class ImageChannelsManager:
                     'code': IMG_CODE_SUCCESS,
                     'data': {}
                 }
+            elif cmd == IMG_CMD_GET_LATEST_IMAGE:
+                cno, pp, res = self.get_pp_from_cmd(data)
+                if pp:
+                    res = {
+                        'code': IMG_CODE_SUCCESS,
+                        'data': {
+                            'filename': self.get_latest_image(pp)
+                        }
+                    }
             elif cmd == IMG_CMD_CHANNEL_ALG_CHANGED:
-                cno = data['data']['cno']
-                for pp in self.process_pairs:
-                    if pp.cno == cno:
-                        cas = ChannelAlgorithm.get_cas_params(pp.cno)
-                        pp.pr.set_params(cas)
-                        break
-                res = {
-                    'code': IMG_CODE_SUCCESS,
-                    'data': {}
-                }
+                cno, pp, res = self.get_pp_from_cmd(data)
+                if pp:
+                    cas = ChannelAlgorithm.get_cas_params(pp.cno)
+                    pp.pr.set_params(cas)
+                    res = {
+                        'code': IMG_CODE_SUCCESS,
+                        'data': {}
+                    }
             elif cmd == IMG_CMD_CHANNEL_CONFIGURED:
-                cno = data['data']['cno']
-                for pp in self.process_pairs:
-                    if pp.cno == cno:
-                        try:
-                            channel = Channel.objects.get(cno=cno)
-                            pp.pw.change_camera(channel.url)
-                        except Channel.DoesNotExist:
-                            pass
-                        break
-                res = {
-                    'code': IMG_CODE_SUCCESS,
-                    'data': {}
-                }
+                cno, pp, res = self.get_pp_from_cmd(data)
+                if pp:
+                    try:
+                        channel = Channel.objects.get(cno=cno)
+                        pp.pw.change_camera(channel.url)
+                        res = {
+                            'code': IMG_CODE_SUCCESS,
+                            'data': {}
+                        }
+                    except Channel.DoesNotExist:
+                        res = {
+                            'code': IMG_CODE_CHANNEL_NOT_FOUND,
+                            'data': {}
+                        }
+            elif cmd == IMG_CMD_CHANNEL_GET_ONLINE:
+                cno, pp, res = self.get_pp_from_cmd(data)
+                if pp:
+                    res = {
+                        'code': IMG_CODE_SUCCESS,
+                        'data': {'online': pp.pw.online.value}
+                    }
         except:
             pass
         return res
