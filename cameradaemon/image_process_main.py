@@ -152,7 +152,7 @@ class ImageChannelsManager:
                 if pp:
                     res = {
                         'code': IMG_CODE_SUCCESS,
-                        'data': {'online': pp.pw.online.value}
+                        'data': {'online': not not pp.pw.online.value}
                     }
         except:
             pass

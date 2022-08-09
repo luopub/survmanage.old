@@ -203,6 +203,8 @@ class DetectionModel:
         if len(results.pred[0]) == 0:
             return
 
+        print(f'{cno}-predict_single_frame: found {len(results.pred[0])} objects: {[(results.names[int(p[-1])], p[-2]) for p in results.pred[0]]}')
+
         # 取得分类索引对应的阈值和roi区域
         thresholds = {results.names.index(ca['model_name']): ca['alert_threshold'] for ca in avail_cas}
         regions = {results.names.index(ca['model_name']): ca['roi_region'] for ca in avail_cas}
@@ -225,6 +227,8 @@ class DetectionModel:
         if not pred.shape[0]:
             # 如果没有合适结果，直接返回
             return
+
+        print(f'{cno}-predict_single_frame: remain {len(results.pred[0])} objects: {[results.names[int(p[-1])] for p in results.pred[0]]}')
 
         # 首先保存未标注的图片
         img_unmark = save_raw_frame(results.imgs[0], cno=cno, cvt_color=False)
