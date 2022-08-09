@@ -13,7 +13,8 @@ class Alert(models.Model):
     algorithm = models.ForeignKey(Algorithm, verbose_name='算法', on_delete=models.CASCADE)
     date_time = models.DateTimeField(default=timezone.now, verbose_name='报警时间')
     img = models.CharField(max_length=MAX_FILE_LEN, verbose_name='报警图片')
-    img_unmark = models.CharField(max_length=MAX_FILE_LEN, null=True, verbose_name='报警图片')
+    img_unmark = models.CharField(max_length=MAX_FILE_LEN, null=True, verbose_name='未标注图片')
+    is_misreported = models.BooleanField(default=False, verbose_name='误报')
 
     class Meta:
         unique_together = (('channel', 'algorithm', 'date_time'), )
