@@ -1,6 +1,6 @@
 import json
 from django.db import models
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_delete, post_delete
 from django.dispatch import receiver
 
 from algorithm.models import Algorithm, AlgorithmParametersBase
@@ -56,6 +56,11 @@ class Channel(models.Model):
 @receiver(post_save, sender=Channel)
 def on_channel_post_save(sender, **kwargs):
     ImageClient(IMG_CMD_CHANNEL_CONFIGURED, cno=kwargs['instance'].cno).do_request(wait_result=False)
+
+
+@receiver(pre_delete, sender=Channel)
+def on_channel_pre_delete(sender, **kwargs):
+    ImageClient(IMG_CMD_CHANNEL_DELETED, cno=kwargs['instance'].cno).do_request(wait_result=False)
 
 
 class ChannelAlgorithm(AlgorithmParametersBase):

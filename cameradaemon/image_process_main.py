@@ -147,6 +147,14 @@ class ImageChannelsManager:
                             'code': IMG_CODE_CHANNEL_NOT_FOUND,
                             'data': {}
                         }
+            elif cmd == IMG_CMD_CHANNEL_DELETED:
+                cno, pp, res = self.get_pp_from_cmd(data)
+                if pp:
+                    pp.pw.change_camera('')
+                    res = {
+                        'code': IMG_CODE_SUCCESS,
+                        'data': {}
+                    }
             elif cmd == IMG_CMD_CHANNEL_GET_ONLINE:
                 cno, pp, res = self.get_pp_from_cmd(data)
                 if pp:
