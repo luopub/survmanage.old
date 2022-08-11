@@ -118,15 +118,6 @@ class DetectionModel:
 
         return False
 
-    @staticmethod
-    def rect_intersect(r1, r2):
-        """
-        判断两个矩形是否相交。
-        如果相交，两个矩形的最小外接矩形的宽度和高度都小于两个矩形独自宽度和高度之和
-        """
-        return (max(r1[2], r2[2]) - min(r1[0], r2[0]) < r1[2] - r1[0] + r2[2] - r2[0]
-            and max(r1[3], r2[3]) - min(r1[1], r2[1]) < r1[3] - r1[1] + r2[3] - r2[1])
-
     @classmethod
     def pred_in_roi_region(cls, roi_region, pred):
         """
@@ -134,9 +125,16 @@ class DetectionModel:
         """
         if not roi_region:
             return True
+
+        # 检查4个点是否在多边形内
+        lt = np.array([pred[0], pred[1]])
+        rt = np.array([pred[2], pred[1]])
+        rb = np.array([pred[2], pred[3]])
+        lb = np.array([pred[0], pred[3]])
         for r in roi_region:
-            if cls.rect_intersect([r['x1'], r['y1'], r['x2'], r['y2']], pred):
-                return True
+            for pt in [lt, rt, rb, lb]:
+                if cv.pointPolygonTest(np.array(r), pt, True) > 0:
+                    return True
 
         return False
 
@@ -151,10 +149,9 @@ class DetectionModel:
         for i in index:
             if not regions[i]:
                 continue
-            for r in regions[i]:
-                blk = np.zeros(results.imgs[0].shape, np.uint8)
-                cv.rectangle(blk, [r['x1'], r['y1']], [r['x2'], r['y2']], color, -1)
-                results.imgs[0] = cv.addWeighted(results.imgs[0], 1.0, blk, 0.4, 1)
+            blk = np.zeros(results.imgs[0].shape, np.uint8)
+            cv.fillPoly(blk, np.array(regions[i]), color=color, lineType=cv.LINE_4)
+            results.imgs[0] = cv.addWeighted(results.imgs[0], 1.0, blk, 0.4, 1)
 
     def predict_single_frame(self, raw_frame, cno=0):
         try:
