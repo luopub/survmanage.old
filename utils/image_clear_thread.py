@@ -4,6 +4,8 @@ from threading import Thread, Semaphore
 
 from django.conf import settings
 
+from utils.check_runserver import is_runserver
+
 
 class ImageClearThread(Thread):
     """
@@ -36,6 +38,9 @@ class ImageClearThread(Thread):
                     self.images.remove(item)
 
 
-print('ImageClearThread Inited')
-image_clear_thread = ImageClearThread()
-image_clear_thread.start()
+if is_runserver():
+    print('ImageClearThread Inited')
+    image_clear_thread = ImageClearThread()
+    image_clear_thread.start()
+else:
+    image_clear_thread = None

@@ -13,6 +13,7 @@ from utils.utils import get_filter_for_all_fields
 from cameradaemon.image_client import ImageClient
 from cameradaemon.image_server_code import *
 from utils.image_clear_thread import image_clear_thread
+from utils.check_runserver import is_runserver
 
 from .models import Alert
 
@@ -61,12 +62,13 @@ class AlertViewFilter2(filters.FilterSet):
 
 
 class AlertViewSet2(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
-    queryset = Alert.objects.all().annotate(
-        hour=TruncHour('date_time'),
-        day=TruncDay('date_time')
-    )
     model = Alert
     filterset_class = AlertViewFilter2
+    if is_runserver():
+        queryset = Alert.objects.all().annotate(
+            hour=TruncHour('date_time'),
+            day=TruncDay('date_time')
+        )
 
     serial_depth = 1
 
