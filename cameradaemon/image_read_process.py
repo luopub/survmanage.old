@@ -86,6 +86,9 @@ class DetectionModel:
 
     def init_model(self):
         if self.model_path:
+            import torch
+            print('torch.cuda.is_available()', torch.cuda.is_available())
+            print('torch.cuda.device_count()', torch.cuda.device_count())
             self.model = YOLOv5(self.model_path, device=self.model_device)
 
     def set_params(self, cas):
