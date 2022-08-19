@@ -140,7 +140,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 # ALERT_IMAGE_DIR = Path(BASE_DIR).joinpath('static').joinpath('images')
 if os.path.exists('/.dockerenv'):
-    DYNAMIC_FILE_DIR = '/dynamic_data'
+    DYNAMIC_FILE_DIR = Path('/dynamic_data')
 else:
     DYNAMIC_FILE_DIR = BASE_DIR.parent.joinpath('dynamic')
 ALERT_IMAGE_DIR = DYNAMIC_FILE_DIR.joinpath('images')
