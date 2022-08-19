@@ -182,9 +182,10 @@ CORS_ORIGIN_WHITELIST = [
 
 if os.path.exists('/.dockerenv'):
     IMAGE_SERVER_HOST, IMAGE_SERVER_PORT = "imageserver", 6790
+    MODEL_PATH = '/checkpoints'
+    MODEL_DEVICE = 'cuda:1'
 else:
     IMAGE_SERVER_HOST, IMAGE_SERVER_PORT = "localhost", 6790
-
-MODEL_PATH = r"E:\data\yolov5-checkpoints\yolov5s.pt"
-MODEL_DEVICE = 'cpu'
+    MODEL_PATH = r"E:\data\yolov5-checkpoints\yolov5s.pt"
+    MODEL_DEVICE = 'cpu'
 
