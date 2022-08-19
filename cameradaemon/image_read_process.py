@@ -211,7 +211,7 @@ class DetectionModel:
 
         # 如果在cuda上，先转成cpu再进行后面运算
         if self.model_device.startswith('cuda'):
-            results.pred = results.pred.cpu()
+            results.pred[0] = results.pred[0].cpu()
 
         print(f'{cno}-predict_single_frame: found {len(results.pred[0])} objects: {[(results.names[int(p[-1])], p[-2]) for p in results.pred[0]]}')
 
@@ -242,7 +242,7 @@ class DetectionModel:
 
         # 如果在cuda上，先转成cpu再进行后面运算
         if self.model_device.startswith('cuda'):
-            results.imgs = results.imgs.cpu()
+            results.imgs[0] = results.imgs[0].cpu()
 
         # 首先保存未标注的图片
         img_unmark = save_raw_frame(results.imgs[0], cno=cno, cvt_color=False)
