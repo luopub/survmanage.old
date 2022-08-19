@@ -171,6 +171,10 @@ class DetectionModel:
         except:
             pass
 
+        # debug0820
+        import json
+        print('predict_single_frame ', time.time(), json.dumps(self.cas))
+
         # 只选取指定通道的参数
         cas = [ca for ca in self.cas if ca['channel__cno'] == cno]
 
