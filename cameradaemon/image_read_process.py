@@ -86,6 +86,7 @@ class DetectionModel:
 
     def init_model(self):
         if self.model_path:
+            # 非常奇怪：如果没有这两句显示，模型初始化会失败！！！
             import torch
             print('torch.cuda.is_available()', torch.cuda.is_available())
             print('torch.cuda.device_count()', torch.cuda.device_count())
