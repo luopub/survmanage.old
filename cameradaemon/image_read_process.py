@@ -1,7 +1,7 @@
 import cv2 as cv
 import numpy as np
 from PIL import Image
-import time
+import time, datetime, pytz
 import os
 import ctypes
 from yolov5 import YOLOv5
@@ -107,7 +107,8 @@ class DetectionModel:
             return False
 
         if not local_time:
-            local_time = time.localtime()
+            # 获取当前北京时间
+            local_time = datetime.datetime.utcnow().replace(tzinfo=pytz.timezone('UTC')).astimezone(pytz.timezone('Asia/Shanghai')).timetuple()
 
         this_day = alert_times[local_time.tm_wday]
         if not this_day['enabled'] or not this_day['segs']:
@@ -172,8 +173,8 @@ class DetectionModel:
             pass
 
         # debug0820
-        import json
-        print('predict_single_frame ', time.time(), json.dumps(self.cas))
+        # import json
+        # print('predict_single_frame ', time.time(), json.dumps(self.cas))
 
         # 只选取指定通道的参数
         cas = [ca for ca in self.cas if ca['channel__cno'] == cno]
