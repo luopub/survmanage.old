@@ -58,7 +58,7 @@ class ImageStreamProcess(Process):
 
                     try:
                         self.raw_img_queue.put_nowait(img)
-                    except:
+                    except Exception as e:
                         pass
 
                     frame_count += 1
