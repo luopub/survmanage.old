@@ -1,7 +1,9 @@
+import os
 from django.contrib.auth.models import User
 from rest_framework import routers
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from django.conf import settings
 
 from utils.rest_mixins import GroupbyMixin
 from utils.rest_utils import MyModelViewSet, SimpleViewSetBase
@@ -51,6 +53,21 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
         user = User.objects.create_user(username=username, password=password)
 
         return Response({})
+
+    @action(detail=False, methods=['get'])
+    def get_disk_stats(self, request):
+        """
+        Return disk stats in GB
+        """
+        if settings.IS_DEPLOYED:
+            s = os.statvfs('/')
+            stats = {
+                'size': s.f_bsize * s.f_blocks / (1 << 30),
+                'free': s.f_bsize * s.f_bavail / (1 << 30)
+            }
+        else:
+            stats = {'size': 1e3, 'free': 3.5e2}
+        return Response(stats)
 
 
 router = routers.DefaultRouter()
