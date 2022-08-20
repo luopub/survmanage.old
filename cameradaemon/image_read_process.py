@@ -20,8 +20,9 @@ DEFAULT_IMAGE_DEPTH = 3
 
 
 class ImageStreamProcess(Process):
-    def __init__(self, camera):
+    def __init__(self, camera, cno):
         super(ImageStreamProcess, self).__init__(target=self.process_loop)
+        self.cno = cno
         self.queue_size = 25
         self.raw_img_queue = Queue(self.queue_size)
         self.camera = Manager().Value(ctypes.c_char_p, camera)
@@ -31,14 +32,19 @@ class ImageStreamProcess(Process):
         self.camera.value = camera
 
     def process_loop(self):
-        print('Process to write: %s' % os.getpid())
+        cno = self.cno
+        print(f'{cno}-Process to write: {os.getpid()}')
         while True:
             camera = self.camera.value
-            t1 = time.time()
-            print('Start VideoCapture', camera)
-            cap = cv.VideoCapture(camera)
-            print('Time used for start camera: ', time.time() - t1)
-            if cap.isOpened() and cap.read()[0]:
+            if camera:
+                t1 = time.time()
+                print(f'{cno}-Start VideoCapture', camera)
+                cap = cv.VideoCapture(camera)
+                print(f'{cno}-Time used for start camera: ', time.time() - t1)
+            else:
+                cap = None
+
+            if cap and cap.isOpened() and cap.read()[0]:
                 self.online.value = 1
 
                 # If continuous fail, then the camera may be off line
@@ -69,10 +75,11 @@ class ImageStreamProcess(Process):
                         if camera != self.camera.value:
                             break
 
-            print('camera is offline!')
+            print(f'{cno}-camera is offline!')
             self.online.value = 0
             # Wait for some time to try again
-            cap.release()
+            if cap:
+                cap.release()
             time.sleep(10)
 
 
@@ -293,7 +300,7 @@ class ImageConsumeProcess(Process):
 
     # 在缓冲栈中读取数据:
     def process_loop(self):
-        print('Process to read: %s' % os.getpid())
+        print(f'{self.cno}-Process to read: %s' % os.getpid())
         self.model.init_model()
         # 开始时间
         t1 = time.time()  # 最新图片保存定时

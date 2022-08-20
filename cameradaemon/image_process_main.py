@@ -19,7 +19,7 @@ class ImageProcessPair:
         self.cno = cno
         self.camera = camera
         self.raw_img_queue = None
-        self.pw = ImageStreamProcess(self.camera)
+        self.pw = ImageStreamProcess(self.camera, self.cno)
         self.pr = ImageConsumeProcess(self.cno, self.pw.raw_img_queue, model_path=settings.MODEL_PATH, model_device=settings.MODEL_DEVICE)
 
     def start(self):
