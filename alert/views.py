@@ -17,6 +17,10 @@ from utils.check_runserver import is_runserver
 
 from .models import Alert
 
+from utils.logutils import get_logger
+
+logger = get_logger('alert_views')
+
 
 class AlertViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = Alert
@@ -62,13 +66,14 @@ class AlertViewFilter2(filters.FilterSet):
 
 
 class AlertViewSet2(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
-    model = Alert
-    filterset_class = AlertViewFilter2
+    logger.debug(f'is_runserver {is_runserver()}')
     if is_runserver():
         queryset = Alert.objects.all().annotate(
             hour=TruncHour('date_time'),
             day=TruncDay('date_time')
         )
+    model = Alert
+    filterset_class = AlertViewFilter2
 
     serial_depth = 1
 
