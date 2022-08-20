@@ -12,9 +12,10 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 import os
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-import survmanage
+# Suppose we always deploy with docker
+IS_DEPLOYED = os.path.exists('/.dockerenv')
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -94,7 +95,7 @@ DATABASES = {
         'NAME': 'survmanage',
         'USER': 'root',
         'PASSWORD': '12345678',
-        'HOST': 'mysql' if os.path.exists('/.dockerenv') else '127.0.0.1', # If in docker use mysql's network name
+        'HOST': 'mysql' if IS_DEPLOYED else '127.0.0.1', # If in docker use mysql's network name
         'PORT': 3306,
         'charset': 'utf8mb4',
     },
@@ -139,7 +140,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 # ALERT_IMAGE_DIR = Path(BASE_DIR).joinpath('static').joinpath('images')
-if os.path.exists('/.dockerenv'):
+if IS_DEPLOYED:
     DYNAMIC_FILE_DIR = Path('/dynamic_data')
 else:
     DYNAMIC_FILE_DIR = BASE_DIR.parent.joinpath('dynamic')
@@ -185,7 +186,7 @@ CORS_ORIGIN_WHITELIST = [
     "http://127.0.0.1:8080"
 ]
 
-if os.path.exists('/.dockerenv'):
+if IS_DEPLOYED:
     IMAGE_SERVER_HOST, IMAGE_SERVER_PORT = "imageserver", 6790
     MODEL_PATH = '/checkpoints/yolov5s.pt'
     MODEL_DEVICE = 'cuda:1'
