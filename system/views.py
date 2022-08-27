@@ -28,31 +28,46 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
 
     @action(detail=False, methods=['post'])
     def activate(self, request):
-        if self.model.activated():
-            raise CodeMsgException(ErrorCode.ALREADY_ACTIVED, '项目不能重复激活')
+        # if self.model.activated():
+        #     raise CodeMsgException(ErrorCode.ALREADY_ACTIVED, '项目不能重复激活')
 
+        # 检查项目名称
         data = request.data
         project_name = data.get('project_name')
         if not project_name:
             raise CodeMsgException(ErrorCode.INVALID_PROJECT_NAME, '项目名称无效')
-        auth_code = data.get('auth_code')
-        if not self.model.check_auth_code(auth_code):
-            raise CodeMsgException(ErrorCode.INVALID_AUTH_CODE, '授权码无效或已使用')
+
+        # auth_code = data.get('auth_code')
+        # if not self.model.check_auth_code(auth_code):
+        #     raise CodeMsgException(ErrorCode.INVALID_AUTH_CODE, '授权码无效或已使用')
 
         username = data.get('username')
         password = data.get('password')
         if not username:
             raise CodeMsgException(ErrorCode.INVALID_USERNAME, '用户名不能为空')
-        if User.objects.filter(username=username).count() > 0:
-            raise CodeMsgException(ErrorCode.INVALID_USERNAME, '用户名已经存在')
         if not password:
             raise CodeMsgException(ErrorCode.INVALID_PASSWORD, '密码不能为空')
 
-        # Save after all check finished
-        self.model.activate(project_name, auth_code)
-        user = User.objects.create_user(username=username, password=password)
+        # 先新建用户
+        try:
+            # 如果用户名已经存在，删除后重新创建
+            User.objects.filter(username=username).delete()
+        except Exception as e:
+            pass
+        try:
+            user = User.objects.create_user(username=username, password=password)
+        except Exception as e:
+            raise CodeMsgException(ErrorCode.INVALID_USERNAME_OR_PASSWORD, '用户名或密码不合格')
 
-        return Response({})
+        # Save after all check finished
+        auth_code = data.get('auth_code')
+        code, message = self.model.activate(project_name, auth_code)
+        if code:
+            # 如果激活失败，就将用户删除。以免产生多个用户
+            user.delete()
+            raise CodeMsgException(code, message)
+        else:
+            return Response({})
 
     @action(detail=False, methods=['get'])
     def get_disk_stats(self, request):

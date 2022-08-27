@@ -195,3 +195,5 @@ else:
     MODEL_PATH = r"E:\data\yolov5-checkpoints\yolov5s.pt"
     MODEL_DEVICE = 'cpu'
 
+
+AUTH_SERVER_ROOT = 'http://localhost:9090/api/v1/'

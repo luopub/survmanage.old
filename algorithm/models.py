@@ -7,8 +7,26 @@ MAX_TIME_SEGS_LEN = 256 * 7
 
 
 class Algorithm(models.Model):
-    name = models.CharField(max_length=MAX_ALGORITHM_NAME_LEN, verbose_name='英文名称')
+    name = models.CharField(max_length=MAX_ALGORITHM_NAME_LEN, unique=True, verbose_name='英文名称')
     name_ch = models.CharField(max_length=MAX_ALGORITHM_NAME_LEN, verbose_name='中文名称')
+
+    @classmethod
+    def refresh(cls, algoriths):
+        """
+        algorithms as arrays of {name, name_ch} dict
+        """
+        for a in algoriths:
+            # 首先删除去掉的算法？？？ （暂时不要）
+
+            # 其次更新中文名称
+            try:
+                obj = cls.objects.get(name=a['name'])
+                if obj.name_ch != a['name_ch']:
+                    obj.name_ch = a['name_ch']
+                    obj.save()
+            except Exception as e:
+                # 如果之前没有，那么新建
+                cls.objects.create(name=a['name'], name_ch=a['name_ch'])
 
     model_to_alg_name = {
         'person': 'human',
