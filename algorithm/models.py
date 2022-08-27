@@ -11,11 +11,20 @@ class Algorithm(models.Model):
     name_ch = models.CharField(max_length=MAX_ALGORITHM_NAME_LEN, verbose_name='中文名称')
 
     @classmethod
-    def refresh(cls, algoriths):
+    def refresh(cls, algorithms, delete_old=True):
         """
         algorithms as arrays of {name, name_ch} dict
         """
-        for a in algoriths:
+        if delete_old:
+            new_names = set([a['name'] for a in algorithms])
+            old_names = set()
+            for obj in cls.objects.all():
+                if obj.name not in new_names:
+                    old_names.add(obj.name)
+
+            cls.objects.filter(name__in=old_names).delete()
+
+        for a in algorithms:
             # 首先删除去掉的算法？？？ （暂时不要）
 
             # 其次更新中文名称

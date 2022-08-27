@@ -21,10 +21,11 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
 
     @action(detail=False, methods=['get'])
     def auth_info(self, request):
-        if self.model.activated():
-            return Response({'name': self.model.objects.first().name})
-        else:
-            return Response({})
+        code, message = self.model.re_activate()
+        if code != 0:
+            raise CodeMsgException(code, message)
+
+        return Response({'project_name': self.model.objects.first().project_name})
 
     @action(detail=False, methods=['post'])
     def activate(self, request):
