@@ -3,3 +3,4 @@ djangorestframework
 django-filter
 mysqlclient
 django-cors-headers
+django_db_reconnect

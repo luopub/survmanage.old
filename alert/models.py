@@ -4,6 +4,10 @@ from django.utils import timezone
 from channel.models import Channel
 from algorithm.models import Algorithm
 
+from utils.logutils import get_logger
+
+logger = get_logger('alert_model')
+
 
 MAX_FILE_LEN = 256
 
@@ -23,11 +27,15 @@ class Alert(models.Model):
     def add_alerts(cls, cno=None, img_unmark=None, img=None, predicts=[]):
         try:
             channel = Channel.objects.get(cno=cno)
-        except Channel.DoesNotExist:
+        except Channel.DoesNotExist as e:
+            logger.info('Unknown channel %s' % cno)
             return
 
         for predict in predicts:
             algorithm = Algorithm.get_algorithm_by_predict(predict)
             if not algorithm:
+                logger.info(f'Unknown algorithm, {cno}, {predict}')
                 continue
-            cls.objects.create(channel=channel, algorithm=algorithm, img_unmark=img_unmark, img=img)
+            obj = cls.objects.create(channel=channel, algorithm=algorithm, img_unmark=img_unmark, img=img)
+            if not obj:
+                logger.info(f'Object create failed: {cno}, {predict}')
