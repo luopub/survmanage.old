@@ -30,18 +30,17 @@ class ProjectInfo(models.Model):
         """
         obj = cls.objects.first()
         if obj:
-            return cls.activate(obj.project_name, obj.auth_code)
+            return cls.activate(obj.project_name, obj.auth_code, verification_code=obj.verification_code)
         else:
             return ErrorCode.NOT_ACTIVATED, '尚未激活'
 
     @classmethod
-    def activate(cls, project_name, auth_code):
+    def activate(cls, project_name, auth_code, verification_code=None):
         # 如果已经有激活信息，那么再次验证
-        obj = cls.objects.first()
-        if obj:
-            verification_code = obj.verification_code
-        else:
-            verification_code = None
+        # if obj:
+        #     verification_code = obj.verification_code
+        # else:
+        #     verification_code = None
 
         r = requests.post(settings.AUTH_SERVER_ROOT + 'authorizer/authorizations/activate/',
                           json={'auth_code': auth_code, 'verification_code': verification_code})
@@ -49,6 +48,7 @@ class ProjectInfo(models.Model):
         if r['code'] != 0:
             return r['code'], r['message']
 
+        obj = cls.objects.first()
         if not obj:
             obj = cls()
             # Save algorithms. If we are a new auth code, delete the old algorithms.
