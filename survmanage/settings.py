@@ -195,5 +195,7 @@ else:
     MODEL_PATH = r"E:\data\yolov5-checkpoints\yolov5s.pt"
     MODEL_DEVICE = 'cpu'
 
-
-AUTH_SERVER_ROOT = 'http://localhost:9090/api/v1/'
+if IS_DEPLOYED:
+    AUTH_SERVER_ROOT = 'http://survauthserver:9090/api/v1/'
+else:
+    AUTH_SERVER_ROOT = 'http://localhost:9090/api/v1/'
