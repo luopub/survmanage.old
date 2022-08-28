@@ -52,6 +52,12 @@ class AlertViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
         # images = {id_: 'duiyaduiya-rt.png' for id_ in alert_ids}
         return Response(images)
 
+    @action(detail=False, methods=['post'])
+    def delete_mult(self, request):
+        ids = request.data.get('ids', [])
+        self.model.objects.filter(id__in=ids).delete()
+        return Response({})
+
 
 class AlertViewFilter2(filters.FilterSet):
     class Meta:
