@@ -4,6 +4,7 @@ from rest_framework import routers
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.conf import settings
+from rest_framework.authtoken.models import Token
 
 from utils.rest_mixins import GroupbyMixin
 from utils.rest_utils import MyModelViewSet, SimpleViewSetBase
@@ -52,7 +53,9 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
         # 先新建用户
         try:
             # 如果用户名已经存在，删除后重新创建
-            User.objects.filter(username=username).delete()
+            user = User.objects.get(username=username)
+            Token.objects.filter(user=user).delete()
+            user.delete()
         except Exception as e:
             pass
         try:
