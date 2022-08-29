@@ -1,3 +1,9 @@
+import tempfile
+import zipfile
+import json
+import os
+from django.conf import settings
+from django.http import FileResponse
 from rest_framework import routers
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -82,6 +88,60 @@ class AlertViewSet2(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     filterset_class = AlertViewFilter2
 
     serial_depth = 1
+
+    def create_zip_file_from_qs(self, queryset):
+
+        serializer = self.get_serializer(queryset, many=True)
+
+        # first put everything in as single zipfile
+        temp_zip_file = tempfile.mktemp(prefix='alerts-', suffix='.zip')
+
+        zip = zipfile.ZipFile(temp_zip_file, mode='w')
+
+        zip.writestr('alert-list.json', json.dumps(serializer.data))
+
+        for obj in queryset:
+            for img in [obj.img, obj.img_unmark]:
+                try:
+                    filepath = settings.ALERT_IMAGE_DIR.joinpath(img)
+                    zip.write(filepath, arcname=os.path.join('images', filepath.name))
+                except Exception as e:
+                    pass
+
+        zip.close()
+
+        return temp_zip_file
+
+    @staticmethod
+    def get_file_download_response(filepath):
+        file = open(filepath, 'rb')
+        response = FileResponse(file, filename=filepath)
+        response['Content-Type'] = 'application/octet-stream'
+        response['Content-Disposition'] = f'attachment;filename ="{os.path.basename(filepath)}"'
+
+        return response
+
+    @action(detail=False, methods=['get'])
+    def download_selected(self, request):
+        ids = [int(_id) for _id in request.GET.get('ids', '').split(',') if _id]
+
+        queryset = self.model.objects.filter(id__in=ids)
+
+        temp_zip_file = self.create_zip_file_from_qs(queryset)
+
+        response = self.get_file_download_response(temp_zip_file)
+
+        return response
+
+    @action(detail=False, methods=['get'])
+    def download_filtered(self, request):
+        queryset = self.filter_queryset(self.get_queryset())
+
+        temp_zip_file = self.create_zip_file_from_qs(queryset)
+
+        response = self.get_file_download_response(temp_zip_file)
+
+        return response
 
 
 router = routers.DefaultRouter()
