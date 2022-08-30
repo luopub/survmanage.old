@@ -30,27 +30,53 @@ class Channel(models.Model):
         free_nos = [n for n in range(1, MAX_CHANNEL_NUM+1) if n not in used_nos]
         return used_nos, free_nos
 
+    def config_one_alg(self, k, v):
+        """
+        v is status from frontend
+        """
+        if not v['configured']:
+            try:
+                self.channelalgorithm_set.get(algorithm__name=k).delete()
+            except ChannelAlgorithm.DoesNotExist as e:
+                pass
+        else:
+            algorithm = Algorithm.objects.get(name=k)
+            ChannelAlgorithm.objects.update_or_create(channel=self, algorithm=algorithm, defaults={
+                'analyze_interval': v.get('analyze_interval'),
+                'alert_interval': v.get('alert_interval'),
+                'alert_threshold': v.get('alert_threshold'),
+                'alert_times': v.get('alert_times'),
+                'roi_region': v.get('roi_region')
+            })
+
     def config_alg(self, data):
         """
-        Configure algorithm for this channel
+        Configure algorithm for this channel.
+        data 是以算法名称为键值的字典
         """
         for k, v in data.items():
-            if not v['configured'] or v['configured'] == '0':
-                try:
-                    self.channelalgorithm_set.get(algorithm__name=k).delete()
-                except ChannelAlgorithm.DoesNotExist as e:
-                    pass
-            else:
-                algorithm = Algorithm.objects.get(name=k)
-                ChannelAlgorithm.objects.update_or_create(channel=self, algorithm=algorithm, defaults={
-                    'analyze_interval': v.get('analyze_interval'),
-                    'alert_interval': v.get('alert_interval'),
-                    'alert_threshold': v.get('alert_threshold'),
-                    'alert_times': v.get('alert_times'),
-                    'roi_region': v.get('roi_region')
-                })
+            self.config_one_alg(k, v)
         # 通知后台程序
         ImageClient(IMG_CMD_CHANNEL_ALG_CHANGED, cno=self.cno).do_request(wait_result=False)
+
+    @classmethod
+    def config_alg_by_channel(cls, alg_name, data):
+        """
+        这是通过算法来配置通道，是以cno为索引的数组
+        """
+        cnos = []
+        for i, item in enumerate(data):
+            cno = i + 1
+            try:
+                channel = cls.objects.get(cno=cno)
+                channel.config_one_alg(alg_name, item)
+                cnos.append(cno)
+            except cls.DoesNotExist:
+                pass
+
+        # 通知后台程序
+        for cno in cnos:
+            ImageClient(IMG_CMD_CHANNEL_ALG_CHANGED, cno=cno).do_request(wait_result=False)
 
 
 @receiver(post_save, sender=Channel)
