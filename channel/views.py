@@ -33,6 +33,14 @@ class ChannelViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
         self.model.config_alg_by_channel(alg_name, status)
         return Response({})
 
+    @action(detail=True, methods=['post'])
+    def config_single_alg(self, request, pk):
+        channel = self.model.objects.get(pk=pk)
+        alg_name = request.data.get('alg_name')
+        status = request.data.get('status')
+        channel.config_single_alg(alg_name, status)
+        return Response({})
+
     @action(detail=False, methods=['get'])
     def get_real_time_status(self, request):
         channel_ids = request.GET.get('channel_ids').split(',')

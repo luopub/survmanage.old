@@ -59,6 +59,10 @@ class Channel(models.Model):
         # 通知后台程序
         ImageClient(IMG_CMD_CHANNEL_ALG_CHANGED, cno=self.cno).do_request(wait_result=False)
 
+    def config_single_alg(self, alg_name, data):
+        self.config_one_alg(alg_name, data)
+        ImageClient(IMG_CMD_CHANNEL_ALG_CHANGED, cno=self.cno).do_request(wait_result=False)
+
     @classmethod
     def config_alg_by_channel(cls, alg_name, data):
         """
