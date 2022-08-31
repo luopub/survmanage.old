@@ -100,7 +100,8 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
             'net': deviceinfo.net_stat(),
             'disk': deviceinfo.disk_stat(),
             'release': deviceinfo.release_stat(),
-            'host': deviceinfo.host_stat()
+            'host': deviceinfo.host_stat(),
+            'uname': deviceinfo.uname_stat(),
         }
         return Response(di)
 

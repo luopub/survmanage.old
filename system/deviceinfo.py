@@ -320,3 +320,24 @@ def host_stat():
         name, value = line.strip().split(':')
         host[name] = value.strip()
     return host
+
+
+# 硬件及host, docker里面没有hostnamectl命令！！！
+def uname_stat():
+    # "uname -a": Linux d1726ddea902 5.10.104-tegra #1 SMP PREEMPT Wed Aug 10 20:17:07 PDT 2022 aarch64 GNU/Linux
+    fake_value = {
+        "Operating System": "Linux",
+        "Kernel": "5.10.104-tegra",
+        "Architecture": "aarch64"
+    }
+    if platform.system().lower() != 'linux':
+        return fake_value
+
+    r = os.popen('uname -a')
+    items = r.read().strip().split(' ')
+    uname = {
+        "Operating System": items[0],
+        "Kernel": items[2],
+        "Architecture": items[-2]
+    }
+    return uname
