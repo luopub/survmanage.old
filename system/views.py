@@ -13,6 +13,8 @@ from utils.code_message_exception import CodeMsgException
 
 from .models import ProjectInfo
 
+from . import deviceinfo
+
 
 class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = ProjectInfo
@@ -87,6 +89,20 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
         else:
             stats = {'size': 1e3, 'free': 3.5e2}
         return Response(stats)
+
+    @action(detail=False, methods=['get'])
+    def get_device_info(self, request):
+        di = {
+            'memory': deviceinfo.memory_stat(),
+            'cpu': deviceinfo.cpu_stat(),
+            'load': deviceinfo.load_stat(),
+            'uptime': deviceinfo.uptime_stat(),
+            'net': deviceinfo.net_stat(),
+            'disk': deviceinfo.disk_stat(),
+            'release': deviceinfo.release_stat(),
+            'host': deviceinfo.host_stat()
+        }
+        return Response(di)
 
 
 router = routers.DefaultRouter()
