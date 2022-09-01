@@ -162,7 +162,10 @@ class DetectionModel:
             if not regions[i]:
                 continue
             blk = np.zeros(results.imgs[0].shape, np.uint8)
-            cv.fillPoly(blk, np.array(regions[i]), color=color, lineType=cv.LINE_4)
+            # Multiple polygons should be drawn one by one. Otherwise, some polygons can't be drawn together.
+            for pts in regions[i]:
+                cv.fillPoly(blk, np.array(pts)[np.newaxis, :], color=color, lineType=cv.LINE_4)
+
             results.imgs[0] = cv.addWeighted(results.imgs[0], 1.0, blk, 0.4, 1)
 
     def predict_single_frame(self, raw_frame, cno=0):
@@ -250,36 +253,49 @@ class DetectionModel:
         # 首先保存未标注的图片
         img_unmark = save_raw_frame(results.imgs[0], cno=cno, cvt_color=False)
 
-        self.addRoiRegion(results, regions, class_indexes)
-        # 首先将识别结果图片生成
-        img = save_raw_frame(results.render()[0], cno=cno, cvt_color=False)
+        # 如果有多个类别被发现了，逐个保存，所以这里要先保存旧数据
+        saved_img = results.imgs[0].copy()
+        saved_pred = results.pred[0]
+        saved_class_indexes = [*class_indexes]
+        saved_regions = {**regions}
 
-        # 同一个类别只保留一个记录
-        classes = set()
-        remain_rows = []
-        for i in range(pred.shape[0]):
-            if pred[i, -1] not in classes:
-                classes.add(pred[i, -1])
-                remain_rows.append(i)
+        for class_index in saved_class_indexes:
+            class_indexes = [class_index]
+            regions = {class_index: saved_regions[class_index]}
+            results.imgs[0] = saved_img.copy()
+            results.pred[0] = saved_pred[saved_pred[:, -1] == class_index]
+            pred = results.pred[0]
 
-        pred = pred[remain_rows, :]
+            self.addRoiRegion(results, regions, class_indexes)
+            # 首先将识别结果图片生成
+            img = save_raw_frame(results.render()[0], cno=cno, cvt_color=False)
 
-        predicts = [{
-            'confidence': float(p[-2]),
-            'name': results.names[int(p[-1])]
-        } for p in pred]
+            # 同一个类别只保留一个记录
+            classes = set()
+            remain_rows = []
+            for i in range(pred.shape[0]):
+                if pred[i, -1] not in classes:
+                    classes.add(pred[i, -1])
+                    remain_rows.append(i)
 
-        # 设置最后报警时间
-        for p in pred:
-            for ca in avail_cas:
-                if results.names[int(p[-1])] == ca['model_name']:
-                    ca['last_alert_time'] = time.time()
-                    break
+            pred = pred[remain_rows, :]
 
-        print(f'{cno}-predicts', predicts)
+            predicts = [{
+                'confidence': float(p[-2]),
+                'name': results.names[int(p[-1])]
+            } for p in pred]
 
-        # 保存报警信息
-        ImageClient(IMG_CMD_OBJECT_DETECTED, cno=cno, img_unmark=img_unmark, img=img, predicts=predicts).do_request(wait_result=False)
+            # 设置最后报警时间
+            for p in pred:
+                for ca in avail_cas:
+                    if results.names[int(p[-1])] == ca['model_name']:
+                        ca['last_alert_time'] = time.time()
+                        break
+
+            print(f'{cno}-predicts', predicts)
+
+            # 保存报警信息
+            ImageClient(IMG_CMD_OBJECT_DETECTED, cno=cno, img_unmark=img_unmark, img=img, predicts=predicts).do_request(wait_result=False)
 
 
 class ImageConsumeProcess(Process):
