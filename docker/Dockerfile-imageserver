@@ -1,0 +1,22 @@
+FROM nvcr.io/nvidia/l4t-pytorch:r35.1.0-pth1.12-py3
+
+COPY survmanage/requirements-imageserver.txt .
+
+RUN apt update
+RUN apt install libmysqlclient-dev -y
+# RUN apt --fix-broken install -y
+# grpcio-tools may take more than 10 minutes to build, be patient!!!
+RUN python3 -m pip install grpcio-tools -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN python3 -m pip install opencv-python==4.5.4.58 -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN python3 -m pip install -r requirements-imageserver.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN export PATH=/usr/local/lib/python3.8/dist-packages:$PATH
+RUN cp -R  /usr/local/lib/python3.8/dist-packages/opencv_python.libs /usr/lib/python3.8/dist-packages
+
+RUN mkdir /checkpoints
+COPY yolov5-6.1-checkpoints /checkpoints
+
+RUN mkdir /survmanage
+COPY survmanage /survmanage
+RUN chmod +x /survmanage/startimageserver.sh
+# Note: startimageserver.sh file should not have line ending CRLF!!!
+CMD /survmanage/startimageserver.sh
