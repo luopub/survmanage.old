@@ -6,6 +6,7 @@ services:
       mysql:8.0
     ports:
       - "3307:3306"
+      - "33070:33060"
     volumes: 
       - survmanage-mysql-data:/var/lib/mysql
     networks:
