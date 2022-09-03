@@ -12,7 +12,7 @@ services:
     networks:
       survmanagenetwork:
         aliases:
-          - mysql
+          - msyqlsurv
     environment:
       - MYSQL_ROOT_PASSWORD=12345678
       - MYSQL_DATABASE=survmanage
@@ -37,7 +37,7 @@ services:
       - MYSQL_USERNAME=root
       - MYSQL_PASSWORD=12345678
       - MYSQL_DATABASE=survmanage
-      - MYSQL_HOST=mysql
+      - MYSQL_HOST=msyqlsurv
       - MYSQL_PORT=3307
       - AUTHSERVER_HOST=survauthserver
       - AUTHSERVER_PORT=9998
