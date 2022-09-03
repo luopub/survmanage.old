@@ -16,37 +16,41 @@ services:
       - MYSQL_ROOT_PASSWORD=12345678
       - MYSQL_DATABASE=survmanage
 
-#  survmanage:
-#    image:
-#      survmanage:latest
-#    ports:
-#      - "6789:6789"
-#    networks:
-#      survmanagenetwork:
-#        aliases:
-#          - survmanage
-#      survauthnetwork:
-#        aliases:
-#          - survmanage
-#    depends_on:
-#      - msyqlsurv
-#    environment:
-#      - MYSQL_USERNAME=root
-#      - MYSQL_PASSWORD=12345678
-#      - MYSQL_DATABASE=survmanage
-#      - MYSQL_HOST=mysql
-#      - MYSQL_PORT=3307
-#      - AUTHSERVER_HOST=survauthserver
-#      - AUTHSERVER_PORT=9998
-#      - IMAGESERVER_HOST=imageserver
-#      - IMAGESERVER_PORT=6790
-#      - DYNAMIC_DATA_PATH=/dynamic_data
+  survmanage:
+    image:
+      survmanage:latest
+    ports:
+      - "6789:6789"
+    volumes:
+      - survmanage-dynamic_data:/dynamic_data
+    networks:
+      survmanagenetwork:
+        aliases:
+          - survmanage
+      survauthnetwork:
+        aliases:
+          - survmanage
+    depends_on:
+      - msyqlsurv
+    environment:
+      - MYSQL_USERNAME=root
+      - MYSQL_PASSWORD=12345678
+      - MYSQL_DATABASE=survmanage
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3307
+      - AUTHSERVER_HOST=survauthserver
+      - AUTHSERVER_PORT=9998
+      - IMAGESERVER_HOST=imageserver
+      - IMAGESERVER_PORT=6790
+      - DYNAMIC_DATA_PATH=/dynamic_data
 
 #  imageserver:
 #    image:
 #      imageserver:latest
 #    ports:
 #      - "6790:6790"
+#    volumes:
+#      - survmanage-dynamic_data:/dynamic_data
 #    networks:
 #      survmanagenetwork:
 #        aliases:
