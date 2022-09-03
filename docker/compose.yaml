@@ -72,7 +72,7 @@ services:
     image:
       survmanagenginx:latest
     ports:
-      - "9999:80"
+      - "9999:81"
     networks:
       - survnetwork
     depends_on:
