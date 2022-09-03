@@ -1,0 +1,51 @@
+version: "1.0.0"
+
+services:
+  mysqlauth:
+    image:
+      mysql:8.0
+    ports:
+      - "3306:3306"
+    volumes: 
+      - survauthserver-mysql-data:/var/lib/mysql
+    networks:
+      survauthnetwork:
+        aliases:
+          - mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=12345678
+      - MYSQL_DATABASE=survauthserver
+
+  survauthserver:
+    image:
+      survauthserver:latest
+    ports:
+      - "9090:9090"
+    networks:
+      survauthnetwork:
+        aliases:
+          - survauthserver
+    depends_on:
+      - mysqlauth
+    environment:
+      - MYSQL_USERNAME=root
+      - MYSQL_PASSWORD=12345678
+      - MYSQL_DATABASE=survauthserver
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+
+  survauthnginx:
+    image:
+      survauthnginx:latest
+    ports:
+      - "9998:80"
+    networks:
+      - survauthnetwork
+    depends_on:
+      - survauthserver
+
+networks:
+  survauthnetwork: {}
+
+volumes:
+  survauthserver-mysql-data: {}

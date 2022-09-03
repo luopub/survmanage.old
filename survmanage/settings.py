@@ -92,11 +92,11 @@ WSGI_APPLICATION = 'survmanage.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'survmanage',
-        'USER': 'root',
-        'PASSWORD': '12345678',
-        'HOST': 'mysql' if IS_DEPLOYED else '127.0.0.1', # If in docker use mysql's network name
-        'PORT': 3306,
+        'NAME': os.environ.get('MYSQL_DATABASE') or 'survmanage',
+        'USER': os.environ.get('MYSQL_USERNAME') or 'root',
+        'PASSWORD': os.environ.get('MYSQL_PASSWORD') or '12345678',
+        'HOST': os.environ.get('MYSQL_HOST') or '127.0.0.1',  # If in docker use mysql's network name
+        'PORT': os.environ.get('MYSQL_PORT') or 3306,
         'charset': 'utf8mb4',
     },
 }

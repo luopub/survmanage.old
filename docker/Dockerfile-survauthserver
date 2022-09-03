@@ -1,0 +1,8 @@
+FROM python:3.8.10
+COPY survauthserver/requirements.txt .
+RUN python3 -m pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+RUN mkdir /survauthserver
+COPY survauthserver /survauthserver
+RUN chmod +x /survauthserver/startauthserver.sh
+# Note: startauthserver.sh file should not have line ending CRLF!!!
+CMD /survauthserver/startauthserver.sh

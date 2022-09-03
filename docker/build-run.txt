@@ -1,0 +1,19 @@
+# build dockers，在survauthserver上一层目录
+sudo docker build -t survauthserver:0.2 -t survauthserver:latest -f survauthserver/docker/Dockerfile-survauthserver .
+sudo docker build -t survauthnginx:0.2 -t survauthnginx:latest -f survauthserver/docker/Dockerfile-nginx .
+
+# 首次运行：
+1. mysql修改root用户认证方式
+	sudo docker exec -it docker-mysqlauth-1 mysql -p
+	
+	use mysql;
+	alter user 'root'@'localhost' identified with mysql_native_password by '12345678';
+	alter user 'root'@'%' identified with mysql_native_password by '12345678';
+2. 加载数据
+	sudo docker exec -it docker-survauthserver-1 /bin/bash
+	
+	python3 manage.py loaddata initdata/survauthserver-algorithm-20220903.json
+	python3 manage.py loaddata initdata/survauthserver-authorizer-20220903.json
+3. 创建用户
+	python3 manage.py createsuperuser
+  
