@@ -140,10 +140,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 # ALERT_IMAGE_DIR = Path(BASE_DIR).joinpath('static').joinpath('images')
-if IS_DEPLOYED:
-    DYNAMIC_FILE_DIR = Path('/dynamic_data')
-else:
-    DYNAMIC_FILE_DIR = BASE_DIR.parent.joinpath('dynamic')
+DYNAMIC_DATA_PATH = os.environ.get('DYNAMIC_DATA_PATH')
+DYNAMIC_FILE_DIR = (DYNAMIC_DATA_PATH and Path(DYNAMIC_DATA_PATH)) or BASE_DIR.parent.joinpath('dynamic')
 ALERT_IMAGE_DIR = DYNAMIC_FILE_DIR.joinpath('images')
 
 STATICFILES_DIRS = [
@@ -186,16 +184,11 @@ CORS_ORIGIN_WHITELIST = [
     "http://127.0.0.1:8080"
 ]
 
-if IS_DEPLOYED:
-    IMAGE_SERVER_HOST, IMAGE_SERVER_PORT = "imageserver", 6790
-    MODEL_PATH = '/checkpoints/yolov5s.pt'
-    MODEL_DEVICE = 'cuda:1'
-else:
-    IMAGE_SERVER_HOST, IMAGE_SERVER_PORT = "localhost", 6790
-    MODEL_PATH = r"E:\data\yolov5-checkpoints\yolov5s.pt"
-    MODEL_DEVICE = 'cpu'
+IMAGE_SERVER_HOST = os.environ.get('IMAGESERVER_HOST') or "localhost"
+IMAGE_SERVER_PORT = os.environ.get('IMAGESERVER_PORT') or 6790
+MODEL_PATH = os.environ.get('MODEL_PATH') or r"E:\data\yolov5-checkpoints\yolov5s.pt"
+MODEL_DEVICE = os.environ.get('MODEL_DEVICE') or 'cpu'
 
-if IS_DEPLOYED:
-    AUTH_SERVER_ROOT = 'http://survauthserver:9090/api/v1/'
-else:
-    AUTH_SERVER_ROOT = 'http://localhost:9090/api/v1/'
+AUTHSERVER_HOST = os.environ.get('AUTHSERVER_HOST') or "localhost"
+AUTHSERVER_PORT = os.environ.get('AUTHSERVER_PORT') or "9090"
+AUTH_SERVER_ROOT = f'http://{AUTHSERVER_HOST}:{AUTHSERVER_PORT}/api/v1/'
