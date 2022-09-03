@@ -10,7 +10,7 @@ services:
     volumes: 
       - survmanage-mysql-data:/var/lib/mysql
     networks:
-      survmanagenetwork:
+      survnetwork:
         aliases:
           - msyqlsurv
     environment:
@@ -25,10 +25,7 @@ services:
     volumes:
       - survmanage-dynamic_data:/dynamic_data
     networks:
-      survmanagenetwork:
-        aliases:
-          - survmanage
-      survauthnetwork:
+      survnetwork:
         aliases:
           - survmanage
     depends_on:
@@ -53,7 +50,7 @@ services:
 #    volumes:
 #      - survmanage-dynamic_data:/dynamic_data
 #    networks:
-#      survmanagenetwork:
+#      survnetwork:
 #        aliases:
 #          - imageserver
 #    depends_on:
@@ -74,13 +71,12 @@ services:
 #    ports:
 #      - "9999:80"
 #    networks:
-#      - survmanagenetwork
+#      - survnetwork
 #    depends_on:
 #      - survmanage
 
 networks:
-  survauthnetwork: {}
-  survmanagenetwork: {}
+  survnetwork: {}
 
 volumes:
   survmanage-mysql-data: {}
