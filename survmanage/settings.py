@@ -185,7 +185,7 @@ CORS_ORIGIN_WHITELIST = [
 ]
 
 IMAGE_SERVER_HOST = os.environ.get('IMAGESERVER_HOST') or "localhost"
-IMAGE_SERVER_PORT = os.environ.get('IMAGESERVER_PORT') or 6790
+IMAGE_SERVER_PORT = (os.environ.get('IMAGESERVER_PORT') and int(os.environ.get('IMAGESERVER_PORT'))) or 6790
 MODEL_PATH = os.environ.get('MODEL_PATH') or r"E:\data\yolov5-checkpoints\yolov5s.pt"
 MODEL_DEVICE = os.environ.get('MODEL_DEVICE') or 'cpu'
 

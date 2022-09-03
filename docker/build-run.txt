@@ -18,3 +18,13 @@ sudo docker build -t imageserver:0.2 -t imageserver:latest -f survmanage/docker/
 3. 创建用户
 	python3 manage.py createsuperuser
   
+  
+# 启动mysql
+sudo docker run -d --rm --network  survnetwork --network-alias mysqlsurv -p 3307:3306 -v survmanage-mysql-data:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=12345678 -e MYSQL_DATABASE=survmanage --name mysqlsurv mysql:8.0
+
+# 启动imageserver
+sudo docker run -d --rm --runtime nvidia --network  survnetwork --network-alias imageserver -p 6790:6790 -v survmanage-dynamic_data:/dynamic_data -e MYSQL_USERNAME=root -e MYSQL_PASSWORD=12345678 -e MYSQL_DATABASE=survmanage -e MYSQL_HOST=mysqlsurv -e MYSQL_PORT=3306 -e IMAGESERVER_HOST=imageserver -e IMAGESERVER_PORT=6790 -e MODEL_PATH=/checkpoints/yolov5s.pt -e MODEL_DEVICE=cuda:1 -e DYNAMIC_DATA_PATH=/dynamic_data --name imageserver imageserver:latest
+
+# 启动survmanage
+sudo docker run -d --rm --network  survnetwork --network-alias survmanage -p 6789:6789 -v survmanage-dynamic_data:/dynamic_data -e MYSQL_USERNAME=root -e MYSQL_PASSWORD=12345678 -e MYSQL_DATABASE=survmanage -e MYSQL_HOST=mysqlsurv -e MYSQL_PORT=3306 -e AUTHSERVER_HOST=survauthserver -e AUTHSERVER_PORT=9998 -e IMAGESERVER_HOST=imageserver -e IMAGESERVER_PORT=6790 -e DYNAMIC_DATA_PATH=/dynamic_data  --name survmanage survmanage:latest
+
