@@ -1,6 +1,7 @@
 # build dockers，在survmanage上一层目录
 sudo docker build -t survmanage:0.2 -t survmanage:latest -f survmanage/docker/Dockerfile-survmanage .
 sudo docker build -t survmanagenginx:0.2 -t survmanagenginx:latest -f survmanage/docker/Dockerfile-nginx .
+sudo docker build -t imageserver:0.2 -t imageserver:latest -f survmanage/docker/Dockerfile-imageserver .
 
 # 首次运行：
 1. mysql修改root用户认证方式

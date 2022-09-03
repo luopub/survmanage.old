@@ -1,3 +1,3 @@
 FROM nginx:latest
 #RUN mkdir /etc/nginx
-COPY survauthserver/docker/nginx.conf /etc/nginx/
+COPY survmanage/docker/nginx.conf /etc/nginx/
