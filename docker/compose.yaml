@@ -64,15 +64,15 @@ services:
       - MODEL_DEVICE="cuda:1"
       - DYNAMIC_DATA_PATH=/dynamic_data
 
-  survmanagenginx:
-    image:
-      survmanagenginx:latest
-    ports:
-      - "9999:80"
-    networks:
-      - survnetwork
-    depends_on:
-      - survmanage
+#  survmanagenginx:
+#    image:
+#      survmanagenginx:latest
+#    ports:
+#      - "9999:80"
+#    networks:
+#      - survnetwork
+#    depends_on:
+#      - survmanage
 
 networks:
   survnetwork: {}
