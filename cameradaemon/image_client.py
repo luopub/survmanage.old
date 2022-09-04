@@ -28,5 +28,5 @@ class ImageClient:
                     print("Received: {}".format(received))
 
                     return json.loads(received)
-        except:
-            pass
+        except Exception as e:
+            print('Fail to connect to ', settings.IMAGE_SERVER_HOST, settings.IMAGE_SERVER_PORT, str(e))
