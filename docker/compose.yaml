@@ -9,7 +9,7 @@ services:
     volumes: 
       - survmanage-mysql-data:/var/lib/mysql
     networks:
-      survnetwork:
+      survmanagenetwork:
         aliases:
           - mysqlsurv
     environment:
@@ -19,12 +19,15 @@ services:
   survmanage:
     image:
       survmanage:latest
-    ports:
-      - "6789:6789"
+    # ports:
+    #  - "6789:6789"
     volumes:
       - survmanage-dynamic_data:/dynamic_data
     networks:
-      survnetwork:
+      survmanagenetwork:
+        aliases:
+          - survmanage
+      survauthnetwork:
         aliases:
           - survmanage
     depends_on:
@@ -37,7 +40,7 @@ services:
       - MYSQL_PORT=3306
       - SURVMANAGE_PORT=6789
       - AUTHSERVER_HOST=survauthserver
-      - AUTHSERVER_PORT=9998
+      - AUTHSERVER_PORT=9090  # Should use port 9998 exposed by nginx if run on different host
       - IMAGESERVER_HOST=imageserver
       - IMAGESERVER_PORT=6790
       - DYNAMIC_DATA_PATH=/dynamic_data
@@ -47,12 +50,12 @@ services:
       imageserver:latest
     runtime:
       nvidia
-    ports:
-      - "6790:6790"
+    # ports:
+    #  - "6790:6790"
     volumes:
       - survmanage-dynamic_data:/dynamic_data
     networks:
-      survnetwork:
+      survmanagenetwork:
         aliases:
           - imageserver
     depends_on:
@@ -76,12 +79,13 @@ services:
     ports:
       - "9999:81"
     networks:
-      - survnetwork
+      - survmanagenetwork
     depends_on:
       - survmanage
 
 networks:
-  survnetwork: {}
+  survmanagenetwork: {}
+  survauthnetwork: {}
 
 volumes:
   survmanage-mysql-data: {}
