@@ -17,6 +17,6 @@ COPY yolov5-6.1-checkpoints /checkpoints
 
 RUN mkdir /survmanage
 COPY survmanage /survmanage
-RUN chmod +x /survmanage/startimageserver.sh
+RUN chmod +x /survmanage/docker/startimageserver.sh
 # Note: startimageserver.sh file should not have line ending CRLF!!!
-CMD /survmanage/startimageserver.sh
+CMD /survmanage/docker/startimageserver.sh

@@ -3,6 +3,6 @@ COPY survmanage/requirements-survmanage.txt .
 RUN python3 -m pip install -r requirements-survmanage.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 RUN mkdir /survmanage
 COPY survmanage /survmanage
-RUN chmod +x /survmanage/startsurvmanage.sh
+RUN chmod +x /survmanage/docker/startsurvmanage.sh
 # Note: startsurvmanage.sh file should not have line ending CRLF!!!
-CMD /survmanage/startsurvmanage.sh
+CMD /survmanage/docker/startsurvmanage.sh
