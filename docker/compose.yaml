@@ -18,7 +18,7 @@ services:
 
   survmanage:
     image:
-      survmanage:latest
+      survmanage
     # ports:
     #  - "6789:6789"
     volumes:
@@ -47,7 +47,7 @@ services:
 
   imageserver:
     image:
-      imageserver:latest
+      imageserver
     runtime:
       nvidia
     # ports:
@@ -75,9 +75,9 @@ services:
 
   survmanagenginx:
     image:
-      survmanagenginx:latest
+      survmanagenginx
     ports:
-      - "9999:81"
+      - "9999:9999"
     networks:
       - survmanagenetwork
     depends_on:
