@@ -1,0 +1,8 @@
+#!/bin/bash
+
+# Add the below contet to /etc/rc.local, or create /etc/rc.local
+# If created, must do: sudo chmod +x /etc/rc.local
+cd /docker
+/usr/lib/docker/cli-plugins/docker-compose up -d 2>&1
+
+
