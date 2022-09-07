@@ -22,6 +22,7 @@ services:
     # ports:
     #  - "6789:6789"
     volumes:
+      - /docker:/docker
       - survmanage-dynamic_data:/dynamic_data
     networks:
       survmanagenetwork:
@@ -44,6 +45,7 @@ services:
       - IMAGESERVER_HOST=imageserver
       - IMAGESERVER_PORT=6790
       - DYNAMIC_DATA_PATH=/dynamic_data
+      - UPGRADE_FLAG_FILE=/docker/upgrade_flag
 
   imageserver:
     image:
