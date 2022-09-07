@@ -116,6 +116,13 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
 
         return Response({})
 
+    @action(detail=False, methods=['post'])
+    def reset_device(self, request):
+        with open(settings.RESET_FLAG_FILE, 'wt') as f:
+            f.write('start reset')
+
+        return Response({})
+
 
 router = routers.DefaultRouter()
 router.register('projectinfos', ProjectInfoViewSet)

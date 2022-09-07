@@ -1,12 +1,13 @@
 #!/bin/bash
 
 REPO_NAME=docker20190707
-flag_file=upgrade_flag
+upgrade_flag_file=upgrade_flag
+reset_flag_file=reset_flag
 
 while true; do
-	if [ -f ${flag_file} ]; then
-		echo Found upgrade flag file ${flag_file}
-		rm ${flag_file}
+	if [ -f ${upgrade_flag_file} ]; then
+		echo Found upgrade flag file ${upgrade_flag_file}
+		rm ${upgrade_flag_file}
 
 		echo Start to pull dockers survmanage ...
 		docker pull ${REPO_NAME}/survmanage:latest
@@ -39,8 +40,12 @@ while true; do
 
 		echo Upgrade done. Retart system ...
 		shutdown -r now
-	else
-		echo No upgrade, sleep some seconds
+	elif [ -f ${reset_flag_file} ]; then
+		echo Found reset flag file ${reset_flag_file}
+		rm ${reset_flag_file}
+
+		echo Retart system ...
+		shutdown -r now
 	fi
 	sleep 10
 done
