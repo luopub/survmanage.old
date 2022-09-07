@@ -192,3 +192,8 @@ MODEL_DEVICE = os.environ.get('MODEL_DEVICE') or 'cpu'
 AUTHSERVER_HOST = os.environ.get('AUTHSERVER_HOST') or "localhost"
 AUTHSERVER_PORT = os.environ.get('AUTHSERVER_PORT') or "9090"
 AUTH_SERVER_ROOT = f'http://{AUTHSERVER_HOST}:{AUTHSERVER_PORT}/api/v1/'
+
+AUTHSERVER_ENABLED = False
+
+UPGRADE_FLAG_FILE = os.environ.get('UPGRADE_FLAG_FILE') or DYNAMIC_FILE_DIR.joinpath('upgrade_flag')
+RESET_FLAG_FILE = os.environ.get('RESET_FLAG_FILE') or DYNAMIC_FILE_DIR.joinpath('reset_flag')

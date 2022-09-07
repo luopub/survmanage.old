@@ -24,9 +24,13 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
 
     @action(detail=False, methods=['get'])
     def auth_info(self, request):
-        code, message = self.model.re_activate()
-        if code != 0:
-            raise CodeMsgException(code, message)
+        if settings.AUTHSERVER_ENABLED:
+            code, message = self.model.re_activate()
+            if code != 0:
+                raise CodeMsgException(code, message)
+        else:
+            if self.model.objects.count() == 0:
+                raise CodeMsgException('NOT_ACTIVATED', '系统尚未激活')
 
         return Response({'project_name': self.model.objects.first().project_name})
 
@@ -104,6 +108,13 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
             'uname': deviceinfo.uname_stat(),
         }
         return Response(di)
+
+    @action(detail=False, methods=['post'])
+    def start_upgrade(self, request):
+        with open(settings.UPGRADE_FLAG_FILE, 'wt') as f:
+            f.write('start upgrade')
+
+        return Response({})
 
 
 router = routers.DefaultRouter()
