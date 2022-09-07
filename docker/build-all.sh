@@ -1,4 +1,7 @@
 # build dockers，在survmanage上一层目录
+# Usage:
+#     ./build-all.sh -v <version> -r <repository>
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 cd ../..
