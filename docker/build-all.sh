@@ -27,13 +27,13 @@ done
 echo version $version #参数存在$OPTARG中
 echo repository ${repository}
 
-if [ -n ${repository} ]; then
+if [ x${repository} != x ]; then
   sudo docker tag survmanage:latest ${repository}survmanage:latest
   sudo docker tag survmanagenginx:latest ${repository}survmanagenginx:latest
   sudo docker tag imageserver:latest ${repository}imageserver:latest
 fi
 
-if [ -n ${version} ]; then
+if [ x${version} != x ]; then
   sudo docker tag survmanage:latest ${repository}survmanage:${version}
   sudo docker tag survmanagenginx:latest ${repository}survmanagenginx:${version}
   sudo docker tag imageserver:latest ${repository}imageserver:${version}
