@@ -8,6 +8,6 @@ RUN git clone https://gitee.com/luopub/jsmpeg
 # RUN cd /jsmpeg && npm install
 RUN cd /jsmpeg && npm install ws
 RUN cd /jsmpeg && npm install http-server -g
-COPY docker-entrypoint.sh /
+COPY docker-entrypoint-node-ffmpeg.sh /
 RUN chmod +x /docker-entrypoint-node-ffmpeg.sh
 CMD /docker-entrypoint-node-ffmpeg.sh
