@@ -24,7 +24,7 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
 
     @action(detail=False, methods=['get'])
     def auth_info(self, request):
-        if settings.AUTHSERVER_ENABLED:
+        if settings.AUTH_CHECK_ONLINE:
             code, message = self.model.re_activate()
             if code != 0:
                 raise CodeMsgException(code, message)
