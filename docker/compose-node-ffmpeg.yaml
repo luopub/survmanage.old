@@ -1,0 +1,22 @@
+version: "1.0.0"
+
+# sudo docker run -it -p 8080-8082:8080-8082 -v docker_node-ffmpeg-data:/data --name node-ffmpeg node-ffmpeg:latest /bin/bash
+
+services:
+  node-ffmpeg:
+    image:
+      node-ffmpeg:latest
+    ports:
+      - "8080-8082:8080-8082"
+    volumes:
+      - node-ffmpeg-data:/data
+    networks:
+      survmanagenetwork:
+        aliases:
+          - node-ffmpeg
+
+networks:
+  survmanagenetwork: {}
+
+volumes:
+  node-ffmpeg-data: {}
