@@ -5,6 +5,16 @@ import platform
 
 # 内存信息 / meminfo
 # 返回dict
+HOSTINFO_ROOT = os.environ.get('HOSTINFO_ROOT')
+
+PATH_MEMINFO = f'{HOSTINFO_ROOT}/proc/meminfo'
+PATH_CPUINFO = f'{HOSTINFO_ROOT}/proc/cpuinfo'
+PATH_LOADAVG = f'{HOSTINFO_ROOT}/proc/loadavg'
+PATH_UPTIME = f'{HOSTINFO_ROOT}/proc/uptime'
+PATH_NETDEV = f'{HOSTINFO_ROOT}/proc/net/dev'
+PATH_OS_RELEASE = f'{HOSTINFO_ROOT}/usr/lib/os-release'
+PATH_HOSTNAMECTL = f'{HOSTINFO_ROOT}/usr/bin/hostnamectl'  # Not valid in docker
+PATH_UNAME = f'{HOSTINFO_ROOT}/bin/uname'
 
 
 # !/usr/bin/env python
@@ -65,7 +75,7 @@ def memory_stat():
     if platform.system().lower() != 'linux':
         return fake_value
     mem = {}
-    f = open("/proc/meminfo")
+    f = open(PATH_MEMINFO)
     lines = f.readlines()
     f.close()
     for line in lines:
@@ -101,7 +111,7 @@ def cpu_stat():
         return fake_value
     cpu = []
     cpuinfo = {}
-    f = open("/proc/cpuinfo")
+    f = open(PATH_CPUINFO)
     lines = f.readlines()
     f.close()
     for line in lines:
@@ -132,7 +142,7 @@ def load_stat():
     if platform.system().lower() != 'linux':
         return fake_value
     loadavg = {}
-    f = open("/proc/loadavg")
+    f = open(PATH_LOADAVG)
     con = f.read().split()
     f.close()
     loadavg['lavg_1'] = con[0]
@@ -159,7 +169,7 @@ def uptime_stat():
     if platform.system().lower() != 'linux':
         return fake_value
     uptime = {}
-    f = open("/proc/uptime")
+    f = open(PATH_UPTIME)
     con = f.read().split()
     f.close()
     all_sec = float(con[0])
@@ -202,7 +212,7 @@ def net_stat():
     if platform.system().lower() != 'linux':
         return fake_value
     net = []
-    f = open("/proc/net/dev")
+    f = open(PATH_NETDEV)
     lines = f.readlines()
     f.close()
     for line in lines[2:]:
@@ -286,7 +296,7 @@ def release_stat():
     }
     if platform.system().lower() != 'linux':
         return fake_value
-    f = open("/etc/os-release")
+    f = open(PATH_OS_RELEASE)
     lines = f.readlines()
     f.close()
     release = {}
@@ -311,7 +321,7 @@ def host_stat():
     }
     if platform.system().lower() != 'linux':
         return fake_value
-    r = os.popen('hostnamectl')
+    r = os.popen(PATH_HOSTNAMECTL)
     lines = r.read().split('\n')
     host = {}
     for line in lines:
@@ -333,7 +343,7 @@ def uname_stat():
     if platform.system().lower() != 'linux':
         return fake_value
 
-    r = os.popen('uname -a')
+    r = os.popen(f'{PATH_UNAME} -a')
     items = r.read().strip().split(' ')
     uname = {
         "Operating System": items[0],
