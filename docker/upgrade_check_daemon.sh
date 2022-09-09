@@ -1,8 +1,10 @@
 #!/bin/bash
 
 REPO_NAME=docker20190707
-upgrade_flag_file=upgrade_flag
-reset_flag_file=reset_flag
+# Must start from /docker
+working_dir=/docker
+upgrade_flag_file=${working_dir}/upgrade_flag
+reset_flag_file=${working_dir}/reset_flag
 
 while true; do
 	if [ -f ${upgrade_flag_file} ]; then
@@ -45,8 +47,8 @@ while true; do
 		sleep 10
 
 		echo Update compose.yaml ...
-		docker container cp docker-survmanage-1:/survmanage/docker/compose.yaml /docker
-		docker container cp docker-survmanage-1:/survmanage/docker/upgrade_check_daemon.sh /docker
+		docker container cp docker-survmanage-1:/survmanage/docker/compose.yaml ${working_dir}
+		docker container cp docker-survmanage-1:/survmanage/docker/upgrade_check_daemon.sh ${working_dir}
 		chmod +x /docker/upgrade_check_daemon.sh
 
 		echo Upgrade done. Retart system ...
