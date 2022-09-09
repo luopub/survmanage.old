@@ -11,12 +11,21 @@ while true; do
 
 		echo Start to pull dockers survmanage ...
 		docker pull ${REPO_NAME}/survmanage:latest
+		if [ x$? != x0 ]; then
+		    exit $?
+		fi
 
 		echo Start to pull dockers imageserver ...
 		docker pull ${REPO_NAME}/imageserver:latest
+		if [ x$? != x0 ]; then
+		    exit $?
+		fi
 
 		echo Start to pull dockers survmanagenginx ...
 		docker pull ${REPO_NAME}/survmanagenginx:latest
+		if [ x$? != x0 ]; then
+		    exit $?
+		fi
 
 		echo Shutdown running dockers
 		docker compose down
@@ -36,7 +45,9 @@ while true; do
 		sleep 10
 
 		echo Update compose.yaml ...
-		docker container cp docker-survmanage-1:/survmanage/docker/compose.yaml .
+		docker container cp docker-survmanage-1:/survmanage/docker/compose.yaml /docker
+		docker container cp docker-survmanage-1:/survmanage/docker/upgrade_check_daemon.sh /docker
+		chmod +x /docker/upgrade_check_daemon.sh
 
 		echo Upgrade done. Retart system ...
 		shutdown -r now
