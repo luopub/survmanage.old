@@ -25,6 +25,10 @@ class Channel(models.Model):
     url = models.CharField(max_length=MAX_CHANNEL_URL_LEN, verbose_name='通道RTSP网址')
 
     @classmethod
+    def delete_all(cls):
+        cls.objects.all().delete()
+
+    @classmethod
     def get_used_free_channel_nos(cls):
         used_nos = values_list_to_list(cls.objects.all().values_list('cno'))
         free_nos = [n for n in range(1, MAX_CHANNEL_NUM+1) if n not in used_nos]
@@ -151,4 +155,8 @@ class ChannelAlgorithm(AlgorithmParametersBase):
             new_cas.append(ca)
 
         return new_cas
+
+    @classmethod
+    def delete_all(cls):
+        cls.objects.all().delete()
 

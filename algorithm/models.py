@@ -11,6 +11,10 @@ class Algorithm(models.Model):
     name_ch = models.CharField(max_length=MAX_ALGORITHM_NAME_LEN, verbose_name='中文名称')
 
     @classmethod
+    def delete_all(cls):
+        cls.objects.all().delete()
+
+    @classmethod
     def refresh(cls, algorithms, delete_old=True):
         """
         algorithms as arrays of {name, name_ch} dict
@@ -167,4 +171,7 @@ class AlgorithmDefaultParameters(AlgorithmParametersBase):
     """
     This saves only one record
     """
-    pass
+
+    @classmethod
+    def delete_all(cls):
+        cls.objects.all().delete()

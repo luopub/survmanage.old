@@ -24,6 +24,10 @@ class Alert(models.Model):
         unique_together = (('channel', 'algorithm', 'date_time'), )
 
     @classmethod
+    def delete_all(cls):
+        cls.objects.all().delete()
+
+    @classmethod
     def add_alerts(cls, cno=None, img_unmark=None, img=None, predicts=[]):
         try:
             channel = Channel.objects.get(cno=cno)

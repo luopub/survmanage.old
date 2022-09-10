@@ -1,3 +1,4 @@
+import platform
 import os
 from django.contrib.auth.models import User
 from rest_framework import routers
@@ -10,6 +11,10 @@ from utils.rest_mixins import GroupbyMixin
 from utils.rest_utils import MyModelViewSet, SimpleViewSetBase
 from utils.error_code import ErrorCode
 from utils.code_message_exception import CodeMsgException
+
+from channel.models import Channel, ChannelAlgorithm
+from algorithm.models import Algorithm, AlgorithmDefaultParameters
+from alert.models import Alert
 
 from .models import ProjectInfo
 
@@ -118,6 +123,42 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
 
     @action(detail=False, methods=['post'])
     def reset_device(self, request):
+        with open(settings.RESET_FLAG_FILE, 'wt') as f:
+            f.write('start reset')
+
+        return Response({})
+
+    @action(detail=False, methods=['post'])
+    def reset_params(self, request):
+        ChannelAlgorithm.delete_all()
+        AlgorithmDefaultParameters.delete_all()
+
+        with open(settings.RESET_FLAG_FILE, 'wt') as f:
+            f.write('start reset')
+
+        return Response({})
+
+    @staticmethod
+    def delete_all_data():
+        image_dir = settings.ALERT_IMAGE_DIR
+        if platform.system().lower() == 'linux':
+            del_cmd = f'rm -rf {image_dir}/*'
+        else:
+            del_cmd = rf'del /F/S/Q {image_dir}\*'
+
+        os.system(del_cmd)
+
+    @action(detail=False, methods=['post'])
+    def factory_reset(self, request):
+        Alert.delete_all()
+        ChannelAlgorithm.delete_all()
+        Channel.delete_all()
+        Algorithm.delete_all()
+        AlgorithmDefaultParameters.delete_all()
+        ProjectInfo.delete_all()
+        User.objects.all().delete()
+        self.delete_all_data()
+
         with open(settings.RESET_FLAG_FILE, 'wt') as f:
             f.write('start reset')
 

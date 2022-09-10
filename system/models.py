@@ -19,6 +19,10 @@ class ProjectInfo(models.Model):
     auth_code = models.CharField(max_length=MAX_AUTH_CODE_LEN, unique=True, verbose_name='授权码')
     verification_code = models.CharField(max_length=MAX_AUTH_CODE_LEN, null=True, verbose_name='激活码')  # 证明是同一个人激活
 
+    @classmethod
+    def delete_all(cls):
+        cls.objects.all().delete()
+
     # @classmethod
     # def activated(cls):
     #     return cls.objects.count() > 0 and cls.objects.first().verification_code
