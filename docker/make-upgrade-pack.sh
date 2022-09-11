@@ -42,9 +42,9 @@ sudo mkdir -p "${working_dir}"
 sudo cd "${working_dir}"
 
 # prepare files
-sudo docker save survmanage:latest -o survmanage-latest.tar
-sudo docker save survmanagenginx:latest -o survmanagenginx-latest.tar
-sudo docker save imageserver:latest -o imageserver-latest.tar
+sudo docker save survmanage:latest -o survmanage-latest.tar && sudo chmod +r survmanage-latest.tar
+sudo docker save survmanagenginx:latest -o survmanagenginx-latest.tar && sudo chmod +r survmanagenginx-latest.tar
+sudo docker save imageserver:latest -o imageserver-latest.tar && sudo chmod +r imageserver-latest.tar
 sudo cp -R /docker .
 sudo cp /etc/rc.local .
 
