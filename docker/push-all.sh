@@ -8,7 +8,8 @@ cd ../..
 
 version=
 repository=
-while getopts "v:r:h" arg #选项后面的冒号表示该选项需要参数
+latest=
+while getopts "v:r:hl" arg #选项后面的冒号表示该选项需要参数
 do
         case $arg in
              v)
@@ -16,6 +17,9 @@ do
                 ;;
              r)
                 repository=${OPTARG}/
+                ;;
+             l)
+                latest=1
                 ;;
              h)
                 echo "usage: ./push-all.sh -v <version> -r <repository>"
@@ -36,14 +40,14 @@ if [ "x${repository}" == x ]; then
   exit 1
 fi
 
-if [ "x${repository}" != x ]; then
-  sudo docker tag survmanage:latest "${repository}survmanage:latest"
-  sudo docker tag survmanagenginx:latest "${repository}survmanagenginx:latest"
-  sudo docker tag imageserver:latest "${repository}imageserver:latest"
+if [ "x${latest}" != x ]; then
+  sudo docker push "${repository}survmanage:latest"
+  sudo docker push "${repository}survmanagenginx:latest"
+  sudo docker push "${repository}imageserver:latest"
 fi
 
 if [ "x${version}" != x ]; then
-  sudo docker tag survmanage:latest "${repository}survmanage:${version}"
-  sudo docker tag survmanagenginx:latest "${repository}survmanagenginx:${version}"
-  sudo docker tag imageserver:latest "${repository}imageserver:${version}"
+  sudo docker push "${repository}survmanage:${version}"
+  sudo docker push "${repository}survmanagenginx:${version}"
+  sudo docker push "${repository}imageserver:${version}"
 fi
