@@ -6,8 +6,25 @@ working_dir=/docker
 upgrade_flag_file=${working_dir}/upgrade_flag
 reset_flag_file=${working_dir}/reset_flag
 
+function copy_docker_files() {
+    cd "$working_dir"
+
+    echo Stock container ...
+    docker compose up -d
+
+    echo Wait a while ...
+    sleep 10
+
+    echo Update compose.yaml ...
+    docker container cp docker-survmanage-1:/survmanage/docker/compose.yaml ${working_dir}
+    docker container cp docker-survmanage-1:/survmanage/docker/upgrade_check_daemon.sh ${working_dir}
+    chmod +x ${working_dir}/upgrade_check_daemon.sh
+}
+
 function networks_upgrade() {
+    echo Networks upgrade ...
     echo Start to pull dockers survmanage ...
+
     docker pull ${REPO_NAME}/survmanage:latest
     if [ x$? != x0 ]; then
         exit $?
@@ -36,16 +53,7 @@ function networks_upgrade() {
     docker tag ${REPO_NAME}/imageserver:latest imageserver:latest
     docker tag ${REPO_NAME}/survmanagenginx:latest survmanagenginx:latest
 
-    echo Stock container ...
-    docker compose up -d
-
-    echo Wait a while ...
-    sleep 10
-
-    echo Update compose.yaml ...
-    docker container cp docker-survmanage-1:/survmanage/docker/compose.yaml ${working_dir}
-    docker container cp docker-survmanage-1:/survmanage/docker/upgrade_check_daemon.sh ${working_dir}
-    chmod +x ${working_dir}/upgrade_check_daemon.sh
+    copy_docker_files
 
     echo Upgrade done. Retart system ...
     shutdown -r now
@@ -58,6 +66,43 @@ function reset_device () {
 
 function manual_upgrade () {
   echo manual upgrade from "$1"
+
+  filename=$(basename "$1")
+  directory=$(basename "$filename" .tar)
+
+  if [ "$directory" == "$filename" ]; then
+    echo Package must be a tar ball file.
+    exit 1
+  fi
+
+  cd /tmp
+
+  sudo rm -rf "$directory"
+
+  tar xf "$1" -C .
+
+  # 先关闭原来的compose
+  cd "$working_dir"
+  sudo docker compose down
+  sudo docker compose rm -f
+  sudo docker image rm -f survmanage:latest
+  sudo docker image rm -f imageserver:latest
+  sudo docker image rm -f survmanagenginx:latest
+
+  cd "/tmp/$directory"
+
+  sudo docker load survmanage:latest -i survmanage-latest.tar
+  sudo docker load imageserver:latest -i imageserver-latest.tar
+  sudo docker load survmanagenginx:latest -i survmanagenginx-latest.tar
+
+  cd ..
+  sudo rm -rf "$directory"
+
+  copy_docker_files
+
+  echo Upgrade done. Retart system ...
+  shutdown -r now
+
 }
 
 while true; do
@@ -67,7 +112,6 @@ while true; do
     rm ${upgrade_flag_file}
 
     if [ "x$upgrade_content" == "xnetwork-upgrade" ]; then
-      echo networks_upgrade
       networks_upgrade
     else
       manual_upgrade "$upgrade_content"
