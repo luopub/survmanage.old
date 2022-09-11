@@ -56,12 +56,22 @@ function reset_device () {
 		shutdown -r now
 }
 
+function manual_upgrade () {
+  echo manual upgrade from "$1"
+}
+
 while true; do
 	if [ -f ${upgrade_flag_file} ]; then
 		echo Found upgrade flag file ${upgrade_flag_file}
+		upgrade_content=$(cat ${upgrade_flag_file})
 		rm ${upgrade_flag_file}
 
-		networks_upgrade
+    if [ "x$upgrade_content" == "xnetwork-upgrade" ]; then
+    	echo networks_upgrade
+      networks_upgrade
+    else
+      manual_upgrade "$upgrade_content"
+    fi
 	elif [ -f ${reset_flag_file} ]; then
 		echo Found reset flag file ${reset_flag_file}
 		rm ${reset_flag_file}
