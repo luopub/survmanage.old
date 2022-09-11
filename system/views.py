@@ -35,7 +35,7 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
                 raise CodeMsgException(code, message)
         else:
             if self.model.objects.count() == 0:
-                raise CodeMsgException('NOT_ACTIVATED', '系统尚未激活')
+                raise CodeMsgException(ErrorCode.NOT_ACTIVATED, '系统尚未激活')
 
         return Response({'project_name': self.model.objects.first().project_name})
 

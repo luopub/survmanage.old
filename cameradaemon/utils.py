@@ -1,9 +1,9 @@
 import cv2 as cv
-import hashlib
 from PIL import Image
 import numpy as np
 import time
 from django.conf import settings
+from utils.md5 import get_digest
 
 
 def save_image(image, cno=None, digest=''):
@@ -20,13 +20,6 @@ def save_image(image, cno=None, digest=''):
     image.save(filepath)
 
     return filename
-
-
-def get_digest(bytes):
-    md5 = hashlib.md5()
-    md5.update(bytes)
-    digest = md5.hexdigest()
-    return digest
 
 
 def save_raw_frame(raw_frame, cno=None, cvt_color=True):

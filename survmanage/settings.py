@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'push',
     'system',
     'algorithm',
-    'cameradaemon'
+    'cameradaemon',
+    'upload'
 ]
 
 MIDDLEWARE = [
@@ -197,3 +198,9 @@ AUTH_CHECK_ONLINE = False  # 是否每次连线检查激活状态
 
 UPGRADE_FLAG_FILE = os.environ.get('UPGRADE_FLAG_FILE') or DYNAMIC_FILE_DIR.joinpath('upgrade_flag')
 RESET_FLAG_FILE = os.environ.get('RESET_FLAG_FILE') or DYNAMIC_FILE_DIR.joinpath('reset_flag')
+
+UPLOAD_FILE_DIR = os.environ.get('UPLOAD_FILE_DIR') or DYNAMIC_FILE_DIR.joinpath('upload')
+try:
+    UPLOAD_FILE_DIR.mkdir(parents=False)
+except:
+    pass

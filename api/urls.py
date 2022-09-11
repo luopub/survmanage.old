@@ -5,7 +5,7 @@ from channel.views import router as channel_router
 from push.views import router as push_router
 from system.views import router as system_router
 from rest_framework.authtoken.views import obtain_auth_token
-
+from upload.views import router as upload_router
 
 urlpatterns = [
     path('api-token-auth/', obtain_auth_token),
@@ -13,4 +13,5 @@ urlpatterns = [
     path('algorithm/', include(algorithm_router.urls)),
     path('channel/', include(channel_router.urls)),
     path('system/', include(system_router.urls)),
+    path('upload/', include(upload_router.urls)),
 ]
