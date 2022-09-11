@@ -81,6 +81,8 @@ function manual_upgrade () {
 
   tar xf "$1" -C .
 
+  sudo chmod -R +r "$directory"
+
   # 先关闭原来的compose
   cd "$working_dir"
   sudo docker compose down
