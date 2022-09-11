@@ -45,7 +45,7 @@ sudo cd "${working_dir}"
 sudo docker save survmanage:latest -o survmanage-latest.tar && sudo chmod +r survmanage-latest.tar
 sudo docker save survmanagenginx:latest -o survmanagenginx-latest.tar && sudo chmod +r survmanagenginx-latest.tar
 sudo docker save imageserver:latest -o imageserver-latest.tar && sudo chmod +r imageserver-latest.tar
-sudo cp -R /docker .
+#sudo cp -R /docker .
 sudo cp /etc/rc.local .
 
 # Then pack the directory
