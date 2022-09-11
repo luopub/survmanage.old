@@ -1,5 +1,6 @@
 import platform
 import os
+from pathlib import Path
 from django.contrib.auth.models import User
 from rest_framework import routers
 from rest_framework.decorators import action
@@ -117,7 +118,20 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
     @action(detail=False, methods=['post'])
     def start_upgrade(self, request):
         with open(settings.UPGRADE_FLAG_FILE, 'wt') as f:
-            f.write('start upgrade')
+            f.write('network-upgrade')
+
+        return Response({})
+
+    @action(detail=False, methods=['post'])
+    def start_upgrade_manual(self, request):
+        filename = request.data.get('filename', '')
+        file_path = settings.UPLOAD_FILE_DIR.joinpath(filename)
+
+        if not filename or not file_path.exists():
+            raise CodeMsgException(ErrorCode.UPGRADE_FILE_NOT_FOUND, '升级文件不存在')
+
+        with open(settings.UPGRADE_FLAG_FILE, 'wt', encoding='utf8') as f:
+            f.write(str(file_path))
 
         return Response({})
 
