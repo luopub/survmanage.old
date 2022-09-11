@@ -50,5 +50,6 @@ sudo cp /etc/rc.local .
 
 # Then pack the directory
 cd ..
+sudo rm -f ${working_name}.tar
 sudo tar czf ${working_name}.tar ${working_name}
 sudo chmod +r ${working_name}.tar
