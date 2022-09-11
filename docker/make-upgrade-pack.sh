@@ -39,7 +39,7 @@ working_name="upgrade-${version}"
 working_dir=/tmp/${working_name}
 sudo rm -rf "${working_dir}"
 sudo mkdir -p "${working_dir}"
-cd "${working_dir}"
+sudo cd "${working_dir}"
 
 # prepare files
 sudo docker save survmanage:latest -o survmanage-latest.tar
@@ -49,6 +49,6 @@ sudo cp -R /docker .
 sudo cp /etc/rc.local .
 
 # Then pack the directory
-cd ..
-tar czf ${working_name}.tar ${working_name}
-
+sudo cd ..
+sudo tar czf ${working_name}.tar ${working_name}
+sudo chmod +r ${working_name}.tar
