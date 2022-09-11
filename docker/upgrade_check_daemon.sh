@@ -93,9 +93,9 @@ function manual_upgrade () {
 
   cd "/tmp/$directory"
 
-  sudo docker load survmanage:latest -i survmanage-latest.tar
-  sudo docker load imageserver:latest -i imageserver-latest.tar
-  sudo docker load survmanagenginx:latest -i survmanagenginx-latest.tar
+  sudo docker load -i survmanage-latest.tar
+  sudo docker load -i imageserver-latest.tar
+  sudo docker load -i survmanagenginx-latest.tar
 
   cd ..
   sudo rm -rf "$directory"
