@@ -6,11 +6,7 @@ working_dir=/docker
 upgrade_flag_file=${working_dir}/upgrade_flag
 reset_flag_file=${working_dir}/reset_flag
 
-while true; do
-	if [ -f ${upgrade_flag_file} ]; then
-		echo Found upgrade flag file ${upgrade_flag_file}
-		rm ${upgrade_flag_file}
-
+function networks_upgrade() {
 		echo Start to pull dockers survmanage ...
 		docker pull ${REPO_NAME}/survmanage:latest
 		if [ x$? != x0 ]; then
@@ -49,16 +45,28 @@ while true; do
 		echo Update compose.yaml ...
 		docker container cp docker-survmanage-1:/survmanage/docker/compose.yaml ${working_dir}
 		docker container cp docker-survmanage-1:/survmanage/docker/upgrade_check_daemon.sh ${working_dir}
-		chmod +x /docker/upgrade_check_daemon.sh
+		chmod +x ${working_dir}/upgrade_check_daemon.sh
 
 		echo Upgrade done. Retart system ...
 		shutdown -r now
+}
+
+function reset_device () {
+		echo Retart system ...
+		shutdown -r now
+}
+
+while true; do
+	if [ -f ${upgrade_flag_file} ]; then
+		echo Found upgrade flag file ${upgrade_flag_file}
+		rm ${upgrade_flag_file}
+
+		networks_upgrade
 	elif [ -f ${reset_flag_file} ]; then
 		echo Found reset flag file ${reset_flag_file}
 		rm ${reset_flag_file}
 
-		echo Retart system ...
-		shutdown -r now
+		reset_device
 	fi
 	sleep 10
 done
