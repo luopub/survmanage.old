@@ -2,9 +2,6 @@
 # Usage:
 #     ./build-all.sh -v <version> -r <repository>
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-cd $DIR
-cd ../..
 
 usage () {
   echo "usage: $1 -v <version>"
@@ -34,9 +31,9 @@ if [ "x$version" == x ]; then
   exit 1
 fi
 
-
+tmp_root=/tmp
 working_name="upgrade-${version}"
-working_dir=/tmp/${working_name}
+working_dir="${tmp_root}/${working_name}"
 sudo rm -rf "${working_dir}"
 sudo mkdir -p "${working_dir}"
 cd "${working_dir}"
@@ -53,3 +50,7 @@ cd ..
 sudo rm -f ${working_name}.tar
 sudo tar czf ${working_name}.tar ${working_name}
 sudo chmod +r ${working_name}.tar
+
+echo Copy to upload directory ...
+cd /docker
+sudo docker compose cp "${tmp_root}/${working_name}.tar" survmanage:/dynamic_data
