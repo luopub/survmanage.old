@@ -72,20 +72,24 @@ function reset_device () {
 function manual_upgrade () {
   echo manual upgrade from "$1"
 
+  echo Copy upgrade from docker to local
+  cd "$working_dir"
+  sudo docker compose cp "survmanage:$1" .
+
   filename=$(basename "$1")
   directory=$(basename "$filename" .tar)
+
+  upgrade_file_path="/tmp/$filename"
 
   if [ "$directory" == "$filename" ]; then
     echo Package must be a tar ball file.
     exit 1
   fi
 
-  cd /tmp
-
   sudo rm -rf "$directory"
 
   echo Extracting tarball ...
-  tar xf "$1" -C .
+  tar xf "$upgrade_file_path" -C /tmp
 
   sudo chmod -R +r "$directory"
 
