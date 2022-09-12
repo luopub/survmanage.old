@@ -74,43 +74,45 @@ function manual_upgrade () {
 
   echo Copy upgrade from docker to local
   cd "$working_dir"
-  sudo docker compose cp "survmanage:$1" .
+  sudo docker compose cp "survmanage:$1" /tmp
 
   filename=$(basename "$1")
   directory=$(basename "$filename" .tar)
 
   upgrade_file_path="/tmp/$filename"
+  upgrade_file_dir="/tmp/$directory"
 
   if [ "$directory" == "$filename" ]; then
     echo Package must be a tar ball file.
     exit 1
   fi
 
-  sudo rm -rf "$directory"
+  sudo rm -rf "$upgrade_file_dir"
 
   echo Extracting tarball ...
   sudo tar xf "$upgrade_file_path" -C /tmp
 
-  sudo chmod -R +r "$directory"
+  sudo chmod -R +r "$upgrade_file_dir"
 
   echo Shutdown running containers ...
   # 先关闭原来的compose
   cd "$working_dir"
   sudo docker compose down
   sudo docker compose rm -f
+
+  echo Removing old version...
   sudo docker image rm -f survmanage:latest
   sudo docker image rm -f imageserver:latest
   sudo docker image rm -f survmanagenginx:latest
 
   echo Load new images from tarball ...
-  cd "/tmp/$directory"
+  cd "$upgrade_file_dir"
   sudo docker load -i survmanage-latest.tar
   sudo docker load -i imageserver-latest.tar
   sudo docker load -i survmanagenginx-latest.tar
 
   echo Remove the temp folder ...
-  cd ..
-  sudo rm -rf "$directory"
+  sudo rm -rf "$upgrade_file_dir"
 
   copy_docker_files
 
