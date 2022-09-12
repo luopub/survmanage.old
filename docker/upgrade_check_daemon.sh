@@ -79,10 +79,12 @@ function manual_upgrade () {
 
   sudo rm -rf "$directory"
 
+  echo Extracting tarball ...
   tar xf "$1" -C .
 
   sudo chmod -R +r "$directory"
 
+  echo Shutdown running containers ...
   # 先关闭原来的compose
   cd "$working_dir"
   sudo docker compose down
@@ -91,12 +93,13 @@ function manual_upgrade () {
   sudo docker image rm -f imageserver:latest
   sudo docker image rm -f survmanagenginx:latest
 
+  echo Load new images from tarball ...
   cd "/tmp/$directory"
-
   sudo docker load -i survmanage-latest.tar
   sudo docker load -i imageserver-latest.tar
   sudo docker load -i survmanagenginx-latest.tar
 
+  echo Remove the temp folder ...
   cd ..
   sudo rm -rf "$directory"
 
