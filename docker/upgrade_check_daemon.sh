@@ -89,7 +89,7 @@ function manual_upgrade () {
   sudo rm -rf "$directory"
 
   echo Extracting tarball ...
-  tar xf "$upgrade_file_path" -C /tmp
+  sudo tar xf "$upgrade_file_path" -C /tmp
 
   sudo chmod -R +r "$directory"
 
@@ -115,7 +115,7 @@ function manual_upgrade () {
   copy_docker_files
 
   echo Upgrade done. Retart system ...
-  shutdown -r now
+  sudo shutdown -r now
 
 }
 
