@@ -1,5 +1,6 @@
 import platform
 import os
+import gc
 from django.contrib.auth.models import User
 from rest_framework import routers
 from rest_framework.decorators import action
@@ -34,9 +35,13 @@ class UploadViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
             for chunk in file.chunks():
                 f.write(chunk)
 
+        # 尽快释放内存
+        gc.collect()
+
         chunk_num = self.get_uploaded_chunk_num(request.data)
 
-        return Response({'uploaded': list(range(chunk_num))})
+        return Response({'uploaded': chunk_num})
+
 
     @action(detail=False, methods=['post'])
     def merge(self, request):
@@ -64,6 +69,9 @@ class UploadViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
 
                 # Delete the chuck file
                 file_path_c.unlink()
+
+        # 尽快释放内存
+        gc.collect()
 
         if get_file_digest(file_path) != file_info.get('identifier'):
             raise CodeMsgException(ErrorCode.UPLOAD_CONTENT_ERROR, '内容有错')
@@ -102,7 +110,7 @@ class UploadViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
         elif chunk_num == file_info.get('totalChunks'):
             all_upload_success = True
 
-        return Response({'allUploadSuccess': all_upload_success, 'mergeSuccess': merge_success, 'uploaded': list(range(chunk_num))})
+        return Response({'allUploadSuccess': all_upload_success, 'mergeSuccess': merge_success, 'uploaded': chunk_num})
 
 
 router = routers.DefaultRouter()
