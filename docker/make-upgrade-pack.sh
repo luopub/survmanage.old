@@ -53,4 +53,4 @@ sudo chmod +r ${working_name}.tar
 
 echo Copy to upload directory ...
 cd /docker
-sudo docker compose cp "${tmp_root}/${working_name}.tar" survmanage:/dynamic_data
+sudo docker compose cp "${tmp_root}/${working_name}.tar" survmanage:/dynamic_data/upload
