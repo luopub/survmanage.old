@@ -25,6 +25,11 @@ function networks_upgrade() {
     echo Networks upgrade ...
     echo Start to pull dockers survmanage ...
 
+    echo Remove old image tags ...
+    docker image rm -f ${REPO_NAME}/survmanage:latest survmanage:latest
+    docker image rm -f ${REPO_NAME}/imageserver:latest imageserver:latest
+    docker image rm -f ${REPO_NAME}/survmanagenginx:latest survmanagenginx:latest
+
     docker pull ${REPO_NAME}/survmanage:latest
     if [ x$? != x0 ]; then
         exit $?
