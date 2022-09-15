@@ -204,3 +204,5 @@ try:
     UPLOAD_FILE_DIR.mkdir(parents=False)
 except:
     pass
+
+MODEL_TO_ALG_FILE = BASE_DIR.joinpath('model_to_alg_name.json')
