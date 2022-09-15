@@ -42,7 +42,6 @@ class UploadViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
 
         return Response({'uploaded': chunk_num})
 
-
     @action(detail=False, methods=['post'])
     def merge(self, request):
         """
