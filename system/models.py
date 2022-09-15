@@ -59,7 +59,7 @@ class ProjectInfo(models.Model):
             Algorithm.refresh(r['data']['algorithms'], delete_old=True)
         else:
             # Save algorithms
-            Algorithm.refresh(r['data']['algorithms'], delete_old=False)
+            Algorithm.refresh(r['data']['algorithms'], delete_old=True)
 
         verification_code = r['data']['verification_code']
         # 如果没有变化就不用保存
