@@ -315,11 +315,14 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
 
         return Response({})
 
-    @action(detail=False, methods=['post'])
-    def reset_device(self, request):
+    @staticmethod
+    def start_reset_device():
         with open(settings.RESET_FLAG_FILE, 'wt') as f:
             f.write('start reset')
 
+    @action(detail=False, methods=['post'])
+    def reset_device(self, request):
+        self.start_reset_device()
         return Response({})
 
     @action(detail=False, methods=['post'])
@@ -366,6 +369,7 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
     @action(detail=False, methods=['post'])
     def save_network_and_reset(self, request):
         NetworkSetting.set_network_settings(request.data)
+        self.start_reset_device()
         return Response({})
 
 
