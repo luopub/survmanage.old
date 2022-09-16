@@ -27,6 +27,7 @@ services:
       - /usr/bin:/hostinfo/usr/bin
       - /usr/lib:/hostinfo/usr/lib
       - /proc:/hostinfo/proc
+      - /etc/netplan:/etc/netplan
       - survmanage-dynamic_data:/dynamic_data
     networks:
       survmanagenetwork:
