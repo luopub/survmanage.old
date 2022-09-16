@@ -23,9 +23,98 @@ from . import deviceinfo
 
 
 class NetworkSetting:
-    @staticmethod
-    def compose_network_yaml(data):
-        pass
+    @classmethod
+    def set_static_network_values(cls, data, value):
+        data['addresses'] = [value['ip']+'/'+str(cls.mask_to_mask_bits(value['mask']))]
+        data['gateway4'] = value['gateway']
+        data['nameservers'] = {'addresses': [value['dns1'], value['dns2']]}
+
+    @classmethod
+    def set_network_settings_eth0(cls, eth0):
+        """
+            network:
+               version: 2
+               renderer: networkd
+               ethernets:
+                  eth0:
+                     dhcp4: no
+                     addresses: [192.168.0.166/24]
+                     gateway4: 192.168.0.1 #这里注释掉，不然连接不上外网，有线的优先级发生冲突
+                     nameservers: #也注释掉，用不到
+                         addresses: [114.114.114.114,8.8.8.8]
+        """
+        data = {
+            'network': {
+                'version': 2,
+                'renderer': 'networkd',
+                'ethernets': {
+                    'eth0': {
+                    }
+                }
+            }
+        }
+
+        data_eth0 = data['network']['ethernets']['eth0']
+        use_dhcp = ('useDhcp' not in eth0) or eth0.get('useDhcp')
+        data_eth0['dhcp4'] = 'yes' if use_dhcp else 'no'
+
+        if not use_dhcp:
+            cls.set_static_network_values(data_eth0, eth0)
+
+        yaml = YAML()
+        yaml.dump(data, settings.NETWORK_CONFIG_ETH0)
+
+    @classmethod
+    def set_network_settings_wlan0(cls, wlan0):
+        """
+            network:
+                version: 2
+                renderer: networkd
+                #ethernets:
+                wifis:
+                    wlan0:
+                        dhcp4: no
+                        access-points:
+                            "TP-LINK-DY":
+                                 password: "dianying123"
+                        addresses: [192.168.0.222/24]
+                        gateway4: 192.168.0.1
+                        nameservers:
+                            addresses: [114.114.114.114,8.8.8.8]
+        """
+        data = {
+            'network': {
+                'version': 2,
+                'renderer': 'networkd',
+                'wifis': {
+                    'wlan0': {
+                    }
+                }
+            }
+        }
+
+        data_wlan0 = data['network']['wifis']['wlan0']
+        if wlan0.get('enableWlan'):
+            use_dhcp = ('useDhcp' not in wlan0) or wlan0.get('useDhcp')
+            data_wlan0['dhcp4'] = 'yes' if use_dhcp else 'no'
+            if wlan0.get('ssidName'):
+                data_wlan0['access-points'] = {
+                    wlan0.get('ssidName'): {
+                        'password': wlan0.get('ssidPassword')
+                    }
+                }
+            if not use_dhcp:
+                cls.set_static_network_values(data_wlan0, wlan0)
+
+        yaml = YAML()
+        yaml.dump(data, settings.NETWORK_CONFIG_WLAN0)
+
+    @classmethod
+    def set_network_settings(cls, data):
+        eth0 = data.get('eth0')
+        cls.set_network_settings_eth0(eth0)
+        wlan0 = data.get('wlan0')
+        cls.set_network_settings_wlan0(wlan0)
 
     @staticmethod
     def get_static_network_values(data):
@@ -44,6 +133,16 @@ class NetworkSetting:
         mask = [(256 - (1 << (8 - min(8, max(0, mask_bits - i * 8))))) for i in range(4)]
 
         return '.'.join([str(m) for m in mask])
+
+    @staticmethod
+    def mask_to_mask_bits(mask):
+        mask = mask.split('.')
+        mask = [int(m) << (8*(3-i)) for i, m in enumerate(mask)]
+        mask_value = sum(mask)
+        for i in range(32):
+            if (mask_value & (1 << i)) != 0:
+                return 32 - i
+        return 0
 
     @classmethod
     def get_network_settings_from_yaml(cls):
@@ -265,8 +364,9 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
         return Response(result)
 
     @action(detail=False, methods=['post'])
-    def set_network_and_reset(self, request):
-        pass
+    def save_network_and_reset(self, request):
+        NetworkSetting.set_network_settings(request.data)
+        return Response({})
 
 
 router = routers.DefaultRouter()
