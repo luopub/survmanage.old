@@ -1,6 +1,6 @@
 import platform
 import os
-from pathlib import Path
+from ruamel.yaml import YAML
 from django.contrib.auth.models import User
 from rest_framework import routers
 from rest_framework.decorators import action
@@ -20,6 +20,87 @@ from alert.models import Alert
 from .models import ProjectInfo
 
 from . import deviceinfo
+
+
+class NetworkSetting:
+    @staticmethod
+    def compose_network_yaml(data):
+        pass
+
+    @staticmethod
+    def get_static_network_values(data):
+        address = data['addresses'][0]
+        mask_bits = ('/' in address and int(address.split('/')[1])) or 0
+        ip = ('/' in address and address.split('/')[0]) or address
+        gateway = data['gateway4']
+        dns = data['nameservers']['addresses']
+        dns1 = len(dns) > 0 and dns[0] or None
+        dns2 = len(dns) > 1 and dns[1] or None
+
+        return ip, mask_bits, gateway, dns1, dns2
+
+    @staticmethod
+    def mask_bits_to_mask(mask_bits):
+        mask = [(256 - (1 << (8 - min(8, max(0, mask_bits - i * 8))))) for i in range(4)]
+
+        return '.'.join([str(m) for m in mask])
+
+    @classmethod
+    def get_network_settings_from_yaml(cls):
+        result = {}
+        if settings.NETWORK_CONFIG_ETH0.exists():
+            with open(settings.NETWORK_CONFIG_ETH0, encoding='utf-8') as f:
+                yaml = YAML(typ='safe')  # default, if not specfied, is 'rt' (round-trip)
+                data = yaml.load(f)
+                try:
+                    eth0 = data['network']['ethernets']['eth0']
+                    use_dhcp = eth0['dhcp4'] == 'yes'
+                    data_eth0 = {
+                        'useDhcp': use_dhcp
+                    }
+                    if not use_dhcp:
+                        ip, mask_bits, gateway, dns1, dns2 = cls.get_static_network_values(eth0)
+                        data_eth0.update({
+                            'ip': ip,
+                            'mask': cls.mask_bits_to_mask(mask_bits),
+                            'gateway': gateway,
+                            'dns1': dns1,
+                            'dns2': dns2
+                        })
+                    result['eth0'] = data_eth0
+                except Exception as e:
+                    pass
+
+        if settings.NETWORK_CONFIG_WLAN0.exists():
+            with open(settings.NETWORK_CONFIG_WLAN0, encoding='utf-8') as f:
+                yaml = YAML(typ='safe')  # default, if not specfied, is 'rt' (round-trip)
+                data = yaml.load(f)
+                try:
+                    wlan0 = data['network']['wifis']['wlan0']
+                    use_dhcp = wlan0['dhcp4'] == 'yes'
+                    data_wlan0 = {
+                        'useDhcp': use_dhcp
+                    }
+                    ssid_name = list(wlan0['access-points'].keys())[0]
+                    ssid_password = list(wlan0['access-points'].values())[0]['password']
+                    data_wlan0.update({
+                        'ssidName': ssid_name,
+                        'ssidPassword': ssid_password,
+                        'enableWlan': not not (ssid_name and ssid_password)
+                    })
+                    if not use_dhcp:
+                        ip, mask_bits, gateway, dns1, dns2 = cls.get_static_network_values(wlan0)
+                        data_wlan0.update({
+                            'ip': ip,
+                            'mask': cls.mask_bits_to_mask(mask_bits),
+                            'gateway': gateway,
+                            'dns1': dns1,
+                            'dns2': dns2
+                        })
+                    result['wlan0'] = data_wlan0
+                except Exception as e:
+                    pass
+        return result
 
 
 class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
@@ -177,6 +258,15 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
             f.write('start reset')
 
         return Response({})
+
+    @action(detail=False, methods=['get'])
+    def get_network_settings(self, request):
+        result = NetworkSetting.get_network_settings_from_yaml()
+        return Response(result)
+
+    @action(detail=False, methods=['post'])
+    def set_network_and_reset(self, request):
+        pass
 
 
 router = routers.DefaultRouter()

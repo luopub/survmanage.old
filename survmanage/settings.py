@@ -206,3 +206,10 @@ except:
     pass
 
 MODEL_TO_ALG_FILE = BASE_DIR.joinpath('model_to_alg_name.json')
+
+NETPLAN_CONFIG_DIR = Path('/etc/netplan').resolve()
+if not NETPLAN_CONFIG_DIR.exists():
+    NETPLAN_CONFIG_DIR = Path(os.environ.get('USERPROFILE')).resolve()
+
+NETWORK_CONFIG_ETH0 = NETPLAN_CONFIG_DIR.joinpath('01-netcfg.yaml')
+NETWORK_CONFIG_WLAN0 = NETPLAN_CONFIG_DIR.joinpath('02-netcfg.yaml')
