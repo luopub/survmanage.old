@@ -16,10 +16,8 @@ class BenzhiProvider(models.Model):
 
 class BenzhiSubscription(models.Model):
     event_type = models.CharField(max_length=MAX_EVENT_TYPE_LEN, unique=True)
-    event_type_name = models.CharField(max_length=MAX_EVENT_TYPE_NAME_LEN, unique=True)
+    event_type_name = models.CharField(max_length=MAX_EVENT_TYPE_NAME_LEN)
     is_subscribed = models.BooleanField(default=True)
-    subscribe_time = models.DateTimeField(default=timezone.now)
-    unsubscribe_time = models.DateTimeField(null=True)
 
 
 class BenzhiEventToAlgorithm(models.Model):
