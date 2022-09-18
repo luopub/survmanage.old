@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'system',
     'algorithm',
     'cameradaemon',
-    'upload'
+    'upload',
+    'interface'
 ]
 
 MIDDLEWARE = [
