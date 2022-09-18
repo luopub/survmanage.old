@@ -10,6 +10,7 @@ MAX_TIME_SEGS_LEN = 256 * 7
 class Algorithm(models.Model):
     name = models.CharField(max_length=MAX_ALGORITHM_NAME_LEN, unique=True, verbose_name='英文名称')
     name_ch = models.CharField(max_length=MAX_ALGORITHM_NAME_LEN, verbose_name='中文名称')
+    event_type = models.IntegerField(null=True)
 
     # 这是一个映射表，将yolov5的类目映射成我们所需要的类目英文名称
     with open(settings.MODEL_TO_ALG_FILE, encoding='utf-8') as f:
@@ -22,29 +23,16 @@ class Algorithm(models.Model):
     @classmethod
     def refresh(cls, algorithms, delete_old=True):
         """
-        algorithms as arrays of {name, name_ch} dict
+        algorithms as arrays of {name, name_ch, event_type} dict
         """
         if delete_old:
             new_names = set([a['name'] for a in algorithms])
-            old_names = set()
-            for obj in cls.objects.all():
-                if obj.name not in new_names:
-                    old_names.add(obj.name)
+            rm_names = set([obj.name for obj in cls.objects.all() if obj.name not in new_names])
 
-            cls.objects.filter(name__in=old_names).delete()
+            cls.objects.filter(name__in=rm_names).delete()
 
         for a in algorithms:
-            # 首先删除去掉的算法？？？ （暂时不要）
-
-            # 其次更新中文名称
-            try:
-                obj = cls.objects.get(name=a['name'])
-                if obj.name_ch != a['name_ch']:
-                    obj.name_ch = a['name_ch']
-                    obj.save()
-            except Exception as e:
-                # 如果之前没有，那么新建
-                cls.objects.create(name=a['name'], name_ch=a['name_ch'])
+            cls.objects.update_or_create(name=a['name'], defaults={'name_ch': a['name_ch'], 'event_type': a['event_type']})
 
     @classmethod
     def map_alg_name_to_model_name(cls, alg_name):
