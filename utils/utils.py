@@ -12,6 +12,7 @@ from django.db.models.fields.related_descriptors import (
     ForwardOneToOneDescriptor, ManyToManyDescriptor,
     ReverseManyToOneDescriptor, ReverseOneToOneDescriptor,
 )
+import base64
 from utils.logutils import get_logger
 
 
@@ -265,3 +266,12 @@ def get_cursor_dict_results(cursor):
     fields = [f[0] for f in cursor.description]
     res = cursor.fetchall()
     return [dict(zip(fields, r)) for r in res]
+
+
+def image_to_data_url(filepath, mime=None):
+    if not mime:
+        mime = 'image/' + filepath.name.split('.')[-1].lower()
+    with open(filepath, 'rb') as f:
+        # base64 = pybase64.standard_b64decode(f.read())
+        data = base64.b64encode(f.read()).decode()
+    return f'data:{mime};base64,{data}'

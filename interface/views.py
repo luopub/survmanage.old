@@ -1,22 +1,12 @@
-import platform
-import os
-from ruamel.yaml import YAML
-from django.contrib.auth.models import User
 from rest_framework import routers
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.conf import settings
-from rest_framework.authtoken.models import Token
 from rest_framework import serializers
 
 from utils.rest_mixins import GroupbyMixin
 from utils.rest_utils import MyModelViewSet, SimpleViewSetBase
-from utils.error_code import ErrorCode
-from utils.code_message_exception import CodeMsgException
 
 from channel.models import Channel, ChannelAlgorithm
-from algorithm.models import Algorithm, AlgorithmDefaultParameters
-from alert.models import Alert
 from system.models import ProjectInfo
 
 from .models import *

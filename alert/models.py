@@ -1,5 +1,7 @@
 from django.db import models
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 from channel.models import Channel
 from algorithm.models import Algorithm
@@ -23,6 +25,12 @@ class Alert(models.Model):
     class Meta:
         unique_together = (('channel', 'algorithm', 'date_time'), )
 
+    post_save_handlers = []
+
+    @classmethod
+    def add_post_save_handler(cls, handler):
+        cls.post_save_handlers.append(handler)
+
     @classmethod
     def delete_all(cls):
         cls.objects.all().delete()
@@ -43,3 +51,9 @@ class Alert(models.Model):
             obj = cls.objects.create(channel=channel, algorithm=algorithm, img_unmark=img_unmark, img=img)
             if not obj:
                 logger.info(f'Object create failed: {cno}, {predict}')
+
+
+@receiver(post_save, sender=Alert)
+def on_alert_post_save(sender, **kwargs):
+    for handler in Alert.post_save_handlers:
+        handler(kwargs['instance'])

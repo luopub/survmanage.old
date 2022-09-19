@@ -5,3 +5,4 @@ mysqlclient
 django-cors-headers
 requests
 ruamel.yaml
+pybase64

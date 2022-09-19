@@ -1,7 +1,14 @@
 from django.db import models
-from django.utils import timezone
-
+from django.conf import settings
+import requests
+import pytz
 from algorithm.models import MAX_ALGORITHM_NAME_LEN, Algorithm
+from alert.models import Alert
+
+from utils.utils import image_to_data_url
+
+from utils.logutils import get_logger
+logger = get_logger('interface_models')
 
 MAX_EVENT_TYPE_LEN = 32
 MAX_EVENT_TYPE_NAME_LEN = 32
@@ -48,3 +55,40 @@ class BenzhiMetadata(models.Model):
 
 class BenzhiReportUrl(models.Model):
     url = models.URLField(unique=True)
+
+    @classmethod
+    def send_alert(cls, alert):
+        try:
+            if not BenzhiSubscription.objects.get(algorithm=alert.algorithm).is_subscribed:
+                return
+
+            if cls.objects.all().count() == 0:
+                return
+
+            dt = alert.date_time.replace(tzinfo=pytz.timezone('UTC')).astimezone(pytz.timezone('Asia/Shanghai'))
+            data = {
+                'eventId': alert.id,
+                'cameraId': alert.channel.cid,
+                'cameraId_url': alert.channel.url,
+                'alertTime_begin': dt.strftime('%Y-%m-%d %H:%M:%S'),
+                'alertTime_end': dt.strftime('%Y-%m-%d %H:%M:%S'),
+                'alertPic_URL': None,
+                'alertPic_base64': image_to_data_url(settings.ALERT_IMAGE_DIR.joinpath(alert.img)),
+                'eventTypeCode': alert.algorithm.event_type,
+                'eventTypeName': alert.algorithm.name_ch,
+                'eventLevelName': None,
+                'eventLocation': alert.channel.site
+            }
+
+            headers = {}
+            for obj in BenzhiMetadata.objects.all():
+                headers[obj.key] = obj.value
+
+            for obj in cls.objects.all():
+                requests.post(obj.url, json=data, timeout=10, headers=headers)
+        except Exception as e:
+            logger.info(f'Error sending alert report: {str(e)}')
+            pass
+
+
+Alert.add_post_save_handler(BenzhiReportUrl.send_alert)
