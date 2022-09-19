@@ -1,7 +1,8 @@
 import json
 from django.db import models
-from django.db.models.signals import post_save, pre_delete, post_delete
+from django.db.models.signals import post_save, pre_delete, pre_save
 from django.dispatch import receiver
+from django.utils import timezone
 
 from algorithm.models import Algorithm, AlgorithmParametersBase
 
@@ -23,6 +24,8 @@ class Channel(models.Model):
     name = models.CharField(max_length=MAX_CHANNEL_NAME_LEN, verbose_name='通道名称')
     site = models.CharField(max_length=MAX_CHANNEL_SITE_LEN, verbose_name='通道位置')
     url = models.CharField(max_length=MAX_CHANNEL_URL_LEN, verbose_name='通道RTSP网址')
+    create_time = models.DateTimeField(default=timezone.now, verbose_name='创建时间')
+    update_time = models.DateTimeField(default=timezone.now, verbose_name='修改时间')
 
     @classmethod
     def delete_all(cls):
@@ -85,6 +88,12 @@ class Channel(models.Model):
         # 通知后台程序
         for cno in cnos:
             ImageClient(IMG_CMD_CHANNEL_ALG_CHANGED, cno=cno).do_request(wait_result=False)
+
+
+@receiver(pre_save, sender=Channel)
+def on_channel_pre_save(sender, **kwargs):
+    obj = kwargs['instance']
+    obj.update_time = timezone.now()
 
 
 @receiver(post_save, sender=Channel)

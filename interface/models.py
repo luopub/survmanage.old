@@ -15,7 +15,7 @@ class BenzhiProvider(models.Model):
 
 
 class BenzhiSubscription(models.Model):
-    algorithm = models.ForeignKey(Algorithm, unique=True, on_delete=models.CASCADE)
+    algorithm = models.OneToOneField(Algorithm, on_delete=models.CASCADE)
     is_subscribed = models.BooleanField(default=True)
 
     @classmethod
