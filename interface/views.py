@@ -27,6 +27,20 @@ class BenzhiProviderViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSe
 class BenzhiSubscriptionViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = BenzhiSubscription
 
+    authentication_classes = []
+    permission_classes = []
+
+    @action(detail=False, methods=['get', 'post'])
+    def get_subscription_types(self, request):
+        subscptions = self.model.objects.all().values('algorithm__event_type', 'algorithm__name_ch', 'is_subscribed')
+        subscptions = list(map(lambda x: {
+            'EventType': x['algorithm__event_type'],
+            'EventTypeName': x['algorithm__name_ch'],
+            'IsSubscribed': x['is_subscribed']
+        }, subscptions))
+        provider_name = BenzhiProvider.objects.first().provider_name
+        return Response({'ProviderName': provider_name, 'list': subscptions})
+
 
 class BenzhiMetadataViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = BenzhiMetadata

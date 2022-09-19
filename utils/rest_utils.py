@@ -22,7 +22,8 @@ class MyJSONRenderer(renderers.JSONRenderer):
             code = 0 if 200 <= status_code < 300 else status_code
             message = 'Success' if 200 <= status_code < 300 else 'Failed'
 
-        data = {'code': code, 'message': message, 'data': data}
+        # Benzhi require msg field
+        data = {'code': code, 'msg': message, 'message': message, 'data': data}
         return super().render(data, accepted_media_type, renderer_context)
 
 

@@ -8,13 +8,19 @@ MAX_TIME_SEGS_LEN = 256 * 7
 
 
 class Algorithm(models.Model):
+    # 这是一个映射表，将yolov5的类目映射成我们所需要的类目英文名称
+    with open(settings.MODEL_TO_ALG_FILE, encoding='utf-8') as f:
+        model_to_alg_name = json.load(f)
+
     name = models.CharField(max_length=MAX_ALGORITHM_NAME_LEN, unique=True, verbose_name='英文名称')
     name_ch = models.CharField(max_length=MAX_ALGORITHM_NAME_LEN, verbose_name='中文名称')
     event_type = models.IntegerField(null=True)
 
-    # 这是一个映射表，将yolov5的类目映射成我们所需要的类目英文名称
-    with open(settings.MODEL_TO_ALG_FILE, encoding='utf-8') as f:
-        model_to_alg_name = json.load(f)
+    activation_handlers = []
+
+    @classmethod
+    def add_activation_handler(cls, handler):
+        cls.activation_handlers.append(handler)
 
     @classmethod
     def delete_all(cls):
@@ -33,6 +39,9 @@ class Algorithm(models.Model):
 
         for a in algorithms:
             cls.objects.update_or_create(name=a['name'], defaults={'name_ch': a['name_ch'], 'event_type': a['event_type']})
+
+        for handler in cls.activation_handlers:
+            handler()
 
     @classmethod
     def map_alg_name_to_model_name(cls, alg_name):
