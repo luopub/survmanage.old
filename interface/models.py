@@ -1,10 +1,10 @@
 from django.db import models
 from django.conf import settings
 import requests
-import pytz
+
 from algorithm.models import MAX_ALGORITHM_NAME_LEN, Algorithm
 from alert.models import Alert
-
+from utils.datetime_utils import datetime_utc_to_local
 from utils.utils import image_to_data_url
 
 from utils.logutils import get_logger
@@ -65,7 +65,7 @@ class BenzhiReportUrl(models.Model):
             if cls.objects.all().count() == 0:
                 return
 
-            dt = alert.date_time.replace(tzinfo=pytz.timezone('UTC')).astimezone(pytz.timezone('Asia/Shanghai'))
+            dt = datetime_utc_to_local(alert.date_time)
             data = {
                 'eventId': alert.id,
                 'cameraId': alert.channel.cid,

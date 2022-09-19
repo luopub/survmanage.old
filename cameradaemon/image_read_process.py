@@ -7,6 +7,8 @@ import ctypes
 from yolov5 import YOLOv5
 from multiprocessing import Process, Queue, Manager, Array
 
+from utils.datetime_utils import datetime_utc_to_local
+
 from .image_client import ImageClient
 from .image_server_code import *
 from .utils import save_raw_frame
@@ -123,7 +125,7 @@ class DetectionModel:
 
         if not local_time:
             # 获取当前北京时间
-            local_time = datetime.datetime.utcnow().replace(tzinfo=pytz.timezone('UTC')).astimezone(pytz.timezone('Asia/Shanghai')).timetuple()
+            local_time = datetime_utc_to_local(datetime.datetime.utcnow()).timetuple()
 
         this_day = alert_times[local_time.tm_wday]
         if not this_day['enabled'] or not this_day['segs']:

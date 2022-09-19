@@ -1,12 +1,12 @@
 from rest_framework import routers
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework import serializers
 
 from utils.rest_mixins import GroupbyMixin
 from utils.rest_utils import MyModelViewSet, SimpleViewSetBase
+from utils.datetime_utils import datetime_utc_to_local
 
-from channel.models import Channel, ChannelAlgorithm
+from channel.models import Channel
 from system.models import ProjectInfo
 
 from .models import *
@@ -14,12 +14,6 @@ from .models import *
 
 class BenzhiProviderViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = BenzhiProvider
-
-
-class ChannelSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Channel
-        fields = '__all__'
 
 
 class BenzhiSubscriptionViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
@@ -67,20 +61,18 @@ class BenzhiSubscriptionViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleVi
         provider_name = BenzhiProvider.objects.first().provider_name
         project_name = ProjectInfo.objects.first().project_name
         channels = Channel.objects.all()
-        serializer = ChannelSerializer(channels, many=True)
-        data = serializer.data
-        data = list(map(lambda x: {
-            'cameraId': x['cid'],
-            'name': x['name'],
-            'installLocation': x['site'],
+        data = [{
+            'cameraId': x.cid,
+            'name': x.name,
+            'installLocation': x.site,
             'longitude': '',
             'latitude': '',
-            'createTime': x['create_time'],
-            'updateTime': x['update_time'],
+            'createTime': datetime_utc_to_local(x.create_time).strftime('%Y-%m-%d %H:%M:%S'),
+            'updateTime': datetime_utc_to_local(x.update_time).strftime('%Y-%m-%d %H:%M:%S'),
             'projectName': project_name,
             'regionName': '',
             'regionPathName': ''
-        }, data))
+        } for x in channels]
         return Response({'ProviderName': provider_name, 'list': data})
 
 

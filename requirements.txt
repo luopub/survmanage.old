@@ -8,3 +8,4 @@ mysqlclient
 django-cors-headers
 opencv-contrib-python
 yolo5
+pybase64
