@@ -82,19 +82,18 @@ class NetworkSetting:
                         nameservers:
                             addresses: [114.114.114.114,8.8.8.8]
         """
-        data = {
-            'network': {
-                'version': 2,
-                'renderer': 'networkd',
-                'wifis': {
-                    'wlan0': {
+        if wlan0.get('enableWlan'):
+            data = {
+                'network': {
+                    'version': 2,
+                    'renderer': 'networkd',
+                    'wifis': {
+                        'wlan0': {
+                        }
                     }
                 }
             }
-        }
-
-        data_wlan0 = data['network']['wifis']['wlan0']
-        if wlan0.get('enableWlan'):
+            data_wlan0 = data['network']['wifis']['wlan0']
             use_dhcp = ('useDhcp' not in wlan0) or wlan0.get('useDhcp')
             data_wlan0['dhcp4'] = 'yes' if use_dhcp else 'no'
             if wlan0.get('ssidName'):
@@ -105,6 +104,13 @@ class NetworkSetting:
                 }
             if not use_dhcp:
                 cls.set_static_network_values(data_wlan0, wlan0)
+        else:
+            data = {
+                'network': {
+                    'version': 2,
+                    'renderer': 'networkd'
+                }
+            }
 
         yaml = YAML()
         yaml.dump(data, settings.NETWORK_CONFIG_WLAN0)
