@@ -4,3 +4,4 @@ django==3.2.13
 djangorestframework
 django-filter
 mysqlclient
+ruamel.yaml
