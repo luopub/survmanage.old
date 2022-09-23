@@ -62,6 +62,7 @@ services:
     # ports:
     #  - "6790:6790"
     volumes:
+      - /etc/netplan:/etc/netplan
       - survmanage-dynamic_data:/dynamic_data
     networks:
       survmanagenetwork:
