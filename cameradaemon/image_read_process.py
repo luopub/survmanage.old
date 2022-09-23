@@ -171,12 +171,12 @@ class DetectionModel:
         for i in index:
             if not regions[i]:
                 continue
-            blk = np.zeros(results.imgs[0].shape, np.uint8)
+            blk = np.zeros(results.ims[0].shape, np.uint8)
             # Multiple polygons should be drawn one by one. Otherwise, some polygons can't be drawn together.
             for pts in regions[i]:
                 cv.fillPoly(blk, np.array(pts)[np.newaxis, :], color=color, lineType=cv.LINE_4)
 
-            results.imgs[0] = cv.addWeighted(results.imgs[0], 1.0, blk, 0.4, 1)
+            results.ims[0] = cv.addWeighted(results.ims[0], 1.0, blk, 0.4, 1)
 
     def predict_single_frame(self, raw_frame, cno=0):
         try:
@@ -233,12 +233,13 @@ class DetectionModel:
         if self.model_device.startswith('cuda'):
             results.pred[0] = results.pred[0].cpu()
 
+        names_index = {name: k for k, name in results.names.items()}
+
         logger_info(f'{cno}-predict_single_frame: found {len(results.pred[0])} objects: {[(results.names[int(p[-1])], p[-2]) for p in results.pred[0]]}')
 
         # 取得分类索引对应的阈值和roi区域
-        logger_info(f'results.names: {results.names}')
-        thresholds = {results.names.index(ca['model_name']): ca['alert_threshold'] for ca in avail_cas}
-        regions = {results.names.index(ca['model_name']): ca['roi_region'] for ca in avail_cas}
+        thresholds = {names_index.get(ca['model_name']): ca['alert_threshold'] for ca in avail_cas}
+        regions = {names_index.get(ca['model_name']): ca['roi_region'] for ca in avail_cas}
 
         # 过滤掉小于threshold或者不在roi_region的结果
         index = []
@@ -262,10 +263,10 @@ class DetectionModel:
         logger_info(f'{cno}-predict_single_frame: remain {len(results.pred[0])} objects: {[results.names[int(p[-1])] for p in results.pred[0]]}')
 
         # 首先保存未标注的图片
-        img_unmark = save_raw_frame(results.imgs[0], cno=cno, cvt_color=False)
+        img_unmark = save_raw_frame(results.ims[0], cno=cno, cvt_color=False)
 
         # 如果有多个类别被发现了，逐个保存，所以这里要先保存旧数据
-        saved_img = results.imgs[0].copy()
+        saved_img = results.ims[0].copy()
         saved_pred = results.pred[0]
         saved_class_indexes = [*class_indexes]
         saved_regions = {**regions}
@@ -273,7 +274,7 @@ class DetectionModel:
         for class_index in saved_class_indexes:
             class_indexes = [class_index]
             regions = {class_index: saved_regions[class_index]}
-            results.imgs[0] = saved_img.copy()
+            results.ims[0] = saved_img.copy()
             results.pred[0] = saved_pred[saved_pred[:, -1] == class_index]
             pred = results.pred[0]
 
