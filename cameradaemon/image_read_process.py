@@ -236,6 +236,7 @@ class DetectionModel:
         logger_info(f'{cno}-predict_single_frame: found {len(results.pred[0])} objects: {[(results.names[int(p[-1])], p[-2]) for p in results.pred[0]]}')
 
         # 取得分类索引对应的阈值和roi区域
+        logger_info(f'results.names: {results.names}')
         thresholds = {results.names.index(ca['model_name']): ca['alert_threshold'] for ca in avail_cas}
         regions = {results.names.index(ca['model_name']): ca['roi_region'] for ca in avail_cas}
 
