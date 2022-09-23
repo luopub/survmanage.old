@@ -58,6 +58,9 @@ function networks_upgrade() {
     docker tag ${REPO_NAME}/imageserver:latest imageserver:latest
     docker tag ${REPO_NAME}/survmanagenginx:latest survmanagenginx:latest
 
+    echo Removing not used images ...
+    sudo docker image ls | grep "<none>" | awk '{print $3;}' | xargs sudo docker image rm
+
     copy_docker_files
 
     echo Upgrade done. Retart system ...
@@ -110,6 +113,9 @@ function manual_upgrade () {
   sudo docker load -i survmanage-latest.tar
   sudo docker load -i imageserver-latest.tar
   sudo docker load -i survmanagenginx-latest.tar
+
+  echo Removing not used images ...
+  sudo docker image ls | grep "<none>" | awk '{print $3;}' | xargs sudo docker image rm
 
   echo Remove the temp folder ...
   sudo rm -rf "$upgrade_file_dir"
