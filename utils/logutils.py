@@ -1,6 +1,7 @@
 import logging.config   # config 配置
 import os
-# from django.conf import settings
+import copy
+import pathlib
 
 # Code learnt from https://www.cnblogs.com/Agoni-7/p/11129296.html
 
@@ -25,7 +26,7 @@ logfile_path_staff = os.path.join(logfile_dir, 'log1.log')
 # LOGGING_DIC第一层的所有的键不能改变
 LOGGING_DICT = {
     'version': 1,  # 版本号
-    'disable_existing_loggers': False,  #　固定写法
+    'disable_existing_loggers': False,  # 固定写法
     'formatters': {
         'standard': {
             'format': standard_format
@@ -36,14 +37,28 @@ LOGGING_DICT = {
     },
     'filters': {},
     'handlers': {
-        #打印到终端的日志
-        'sh': {
+        # 'sh': None,
+        # 'fh': None,
+    },
+    'loggers': {
+        # logging.getLogger(__name__)拿到的logger配置
+        '': {
+            'handlers': [],  # ['sh', 'fh'],  # 这里把上面定义的两个handler都加上，即log数据既写入文件又打印到屏幕
+            'level': 'DEBUG',
+            'propagate': True,  # 向上（更高level的logger）传递
+        },
+    },
+}
+
+# 打印到终端的日志
+handler_sh = {
             'level': 'DEBUG',
             'class': 'logging.StreamHandler',  # 打印到屏幕
             'formatter': 'simple'
-        },
-        #打印到文件的日志,收集info及以上的日志
-        'fh': {
+        }
+
+# 打印到文件的日志,收集info及以上的日志
+handler_fh = {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',  # 保存到文件
             'formatter': 'standard',
@@ -51,19 +66,18 @@ LOGGING_DICT = {
             'maxBytes': int(1e6),  # 日志大小 n字节
             'backupCount': 20,  # 轮转文件的个数
             'encoding': 'utf-8',  # 日志文件的编码
-        },
-    },
-    'loggers': {
-        #logging.getLogger(__name__)拿到的logger配置
-        '': {
-            'handlers': ['sh', 'fh'],  # 这里把上面定义的两个handler都加上，即log数据既写入文件又打印到屏幕
-            'level': 'DEBUG',
-            'propagate': True,  # 向上（更高level的logger）传递
-        },
-    },
-}
+        }
 
-def get_logger(name):
-    logging.config.dictConfig(LOGGING_DICT)  # 导入上面定义的logging配置 通过字典方式去配置这个日志
+
+def get_logger(filepath, to_console=True, to_file=False):
+    name = pathlib.Path(filepath).resolve().name
+    logging_dict = copy.deepcopy(LOGGING_DICT)
+    if to_console:
+        logging_dict['handlers']['sh'] = handler_sh
+        logging_dict['loggers']['']['handlers'].append('sh')
+    if to_file:
+        logging_dict['handlers']['fh'] = handler_fh
+        logging_dict['loggers']['']['handlers'].append('fh')
+    logging.config.dictConfig(logging_dict)  # 导入上面定义的logging配置 通过字典方式去配置这个日志
     logger = logging.getLogger(name)  # 生成一个log实例  这里可以有参数 传给task_id
     return logger

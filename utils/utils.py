@@ -16,7 +16,7 @@ import base64
 from utils.logutils import get_logger
 
 
-logger = get_logger('utils_utils')
+logger = get_logger(__file__)
 
 
 def decodeHtml(input):

@@ -8,7 +8,7 @@ from django_filters import rest_framework as filters
 from .utils import get_all_fields, get_filter_for_all_fields, get_ordering_fields
 
 from utils.logutils import get_logger
-logger = get_logger('rest_utils')
+logger = get_logger(__file__)
 
 
 class MyJSONRenderer(renderers.JSONRenderer):

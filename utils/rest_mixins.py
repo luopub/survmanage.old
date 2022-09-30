@@ -8,7 +8,7 @@ from django.db.models import Min, Max, Avg, StdDev, Variance
 
 from utils.logutils import get_logger
 
-logger = get_logger('rest_mixins')
+logger = get_logger(__file__)
 
 
 class GroupbyMixin:

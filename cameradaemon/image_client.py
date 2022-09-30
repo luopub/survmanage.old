@@ -2,6 +2,9 @@ import socket
 import json
 from django.conf import settings
 
+from utils.logutils import get_logger
+logger = get_logger(__file__)
+
 
 class ImageClient:
     def __init__(self, cmd, **kwargs):
@@ -19,14 +22,14 @@ class ImageClient:
                 }
                 sock.sendall(json.dumps(data).encode('utf8'))
 
-                print("Sent to server: {}".format(data))
+                logger.info("Sent to server: {}".format(data))
 
                 if wait_result:
                     # Receive data from the server and shut down
                     received = str(sock.recv(1024), "utf8")
 
-                    print("Received: {}".format(received))
+                    logger.info("Received: {}".format(received))
 
                     return json.loads(received)
         except Exception as e:
-            print('Fail to connect to ', settings.IMAGE_SERVER_HOST, settings.IMAGE_SERVER_PORT, str(e))
+            logger.info(f'Fail to connect to {settings.IMAGE_SERVER_HOST}, {settings.IMAGE_SERVER_PORT}, {str(e)}')

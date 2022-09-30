@@ -1,21 +1,19 @@
 import cv2 as cv
 import numpy as np
-from PIL import Image
-import time, datetime, pytz
+import time
 import os
 import ctypes
 from yolov5 import YOLOv5
 from multiprocessing import Process, Queue, Manager, Array
 
-from utils.datetime_utils import datetime_utc_to_local, datetime_local_timestamp
+from utils.datetime_utils import datetime_utc_to_local
 
 from .image_client import ImageClient
 from .image_server_code import *
 from .utils import save_raw_frame
 
-# from utils.logutils import get_logger
-
-# logger = get_logger('image_read_process')
+from utils.logutils import get_logger
+logger = get_logger(__file__)
 
 
 DEFAULT_DETECT_TICK = 500  # 默认检测500毫秒为单位
@@ -23,10 +21,6 @@ DEFAULT_LATEST_IMAGE_INTERVAL = 1000  # 默认保存最新图片间隔
 MAX_IMAGE_WIDTH = 1920
 MAX_IMAGE_HEIGHT = 1080
 DEFAULT_IMAGE_DEPTH = 3
-
-
-def logger_info(*args):
-    print(datetime_local_timestamp(), *args)
 
 
 class ImageStreamProcess(Process):
@@ -43,7 +37,7 @@ class ImageStreamProcess(Process):
 
     def process_loop(self):
         cno = self.cno
-        logger_info(f'{cno}-Process to write: {os.getpid()}')
+        logger.info(f'{cno}-Process to write: {os.getpid()}')
         while True:
             camera = self.camera.value
             if not camera:
@@ -51,9 +45,9 @@ class ImageStreamProcess(Process):
                 continue
 
             t1 = time.time()
-            logger_info(f'{cno}-Start VideoCapture: {camera}')
+            logger.info(f'{cno}-Start VideoCapture: {camera}')
             cap = cv.VideoCapture(camera)
-            logger_info(f'{cno}-Time used for start camera: {time.time() - t1}')
+            logger.info(f'{cno}-Time used for start camera: {time.time() - t1}')
 
             if cap and cap.isOpened() and cap.read()[0]:
                 self.online.value = 1
@@ -86,7 +80,7 @@ class ImageStreamProcess(Process):
                         if camera != self.camera.value:
                             break
 
-            logger_info(f'{cno}-camera is offline, camera url set to {self.camera.value}.')
+            logger.info(f'{cno}-camera is offline, camera url set to {self.camera.value}.')
             self.online.value = 0
             # Wait for some time to try again
             if cap:
@@ -106,8 +100,8 @@ class DetectionModel:
         if self.model_path:
             # 非常奇怪：如果没有这两句显示，模型初始化会失败！！！
             import torch
-            logger_info(f'torch.cuda.is_available(): {torch.cuda.is_available()}')
-            logger_info(f'torch.cuda.device_count(): {torch.cuda.device_count()}')
+            logger.info(f'torch.cuda.is_available(): {torch.cuda.is_available()}')
+            logger.info(f'torch.cuda.device_count(): {torch.cuda.device_count()}')
             self.model = YOLOv5(self.model_path, device=self.model_device)
 
     def set_params(self, cas):
@@ -236,7 +230,7 @@ class DetectionModel:
 
         names_index = {name: k for k, name in results.names.items()}
 
-        logger_info(f'{cno}-predict_single_frame: found {len(results.pred[0])} objects: {[(results.names[int(p[-1])], p[-2]) for p in results.pred[0]]}')
+        logger.info(f'{cno}-predict_single_frame: found {len(results.pred[0])} objects: {[(results.names[int(p[-1])], p[-2]) for p in results.pred[0]]}')
 
         # 取得分类索引对应的阈值和roi区域
         thresholds = {names_index.get(ca['model_name']): ca['alert_threshold'] for ca in avail_cas}
@@ -261,7 +255,7 @@ class DetectionModel:
             # 如果没有合适结果，直接返回
             return
 
-        logger_info(f'{cno}-predict_single_frame: remain {len(results.pred[0])} objects: {[results.names[int(p[-1])] for p in results.pred[0]]}')
+        logger.info(f'{cno}-predict_single_frame: remain {len(results.pred[0])} objects: {[results.names[int(p[-1])] for p in results.pred[0]]}')
 
         # 首先保存未标注的图片
         img_unmark = save_raw_frame(results.ims[0], cno=cno, cvt_color=False)
@@ -305,7 +299,7 @@ class DetectionModel:
                         ca['last_alert_time'] = time.time()
                         break
 
-            logger_info(f'{cno}-predicts: , {predicts}')
+            logger.info(f'{cno}-predicts: , {predicts}')
 
             # 保存报警信息
             ImageClient(IMG_CMD_OBJECT_DETECTED, cno=cno, img_unmark=img_unmark, img=img, predicts=predicts).do_request(wait_result=False)
@@ -329,7 +323,7 @@ class ImageConsumeProcess(Process):
 
     # 在缓冲栈中读取数据:
     def process_loop(self):
-        logger_info(f'{self.cno}-Process to read: %s' % os.getpid())
+        logger.info(f'{self.cno}-Process to read: %s' % os.getpid())
         self.model.init_model()
         # 开始时间
         t1 = time.time()  # 最新图片保存定时

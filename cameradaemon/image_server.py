@@ -2,6 +2,9 @@ import json
 import socketserver
 from django.conf import settings
 
+from utils.logutils import get_logger
+logger = get_logger(__file__)
+
 
 class ImageServerHandler(socketserver.BaseRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -13,7 +16,7 @@ class ImageServerHandler(socketserver.BaseRequestHandler):
         if data:
             data = json.loads(data.decode('utf8'))
 
-            print("{} request received:".format(self.client_address[0]), data)
+            logger.info(f"{self.client_address[0]} request received: {data}")
 
             res = self.server.handler(data)
 

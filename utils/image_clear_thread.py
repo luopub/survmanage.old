@@ -6,6 +6,9 @@ from django.conf import settings
 
 from utils.check_runserver import is_runserver
 
+from utils.logutils import get_logger
+logger = get_logger(__file__)
+
 
 class ImageClearThread(Thread):
     """
@@ -28,18 +31,18 @@ class ImageClearThread(Thread):
                 for item in self.images:
                     if time.time() - item[2] >= item[1]:
                         filepath = settings.ALERT_IMAGE_DIR.joinpath(item[0])
-                        print('Removing image', filepath)
+                        logger.info(f'Removing image {filepath}')
                         try:
                             os.remove(filepath)
                         except Exception as e:
-                            print('Fail to delete image file: ', filepath)
+                            logger.info(f'Fail to delete image file: {filepath}')
                         deleted.append(item)
                 for item in deleted:
                     self.images.remove(item)
 
 
 if is_runserver():
-    print('ImageClearThread Inited')
+    logger.info('ImageClearThread Inited')
     image_clear_thread = ImageClearThread()
     image_clear_thread.start()
 else:

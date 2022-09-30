@@ -8,7 +8,7 @@ from algorithm.models import Algorithm
 
 from utils.logutils import get_logger
 
-logger = get_logger('alert_model')
+logger = get_logger(__file__)
 
 
 MAX_FILE_LEN = 256

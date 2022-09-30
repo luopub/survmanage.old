@@ -25,7 +25,7 @@ from .models import Alert
 
 from utils.logutils import get_logger
 
-logger = get_logger('alert_views')
+logger = get_logger(__file__)
 
 
 class AlertViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
