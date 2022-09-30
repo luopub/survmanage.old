@@ -46,13 +46,14 @@ class ImageStreamProcess(Process):
         logger_info(f'{cno}-Process to write: {os.getpid()}')
         while True:
             camera = self.camera.value
-            if camera:
-                t1 = time.time()
-                logger_info(f'{cno}-Start VideoCapture: {camera}')
-                cap = cv.VideoCapture(camera)
-                logger_info(f'{cno}-Time used for start camera: {time.time() - t1}')
-            else:
-                cap = None
+            if not camera:
+                time.sleep(5)
+                continue
+
+            t1 = time.time()
+            logger_info(f'{cno}-Start VideoCapture: {camera}')
+            cap = cv.VideoCapture(camera)
+            logger_info(f'{cno}-Time used for start camera: {time.time() - t1}')
 
             if cap and cap.isOpened() and cap.read()[0]:
                 self.online.value = 1
@@ -85,7 +86,7 @@ class ImageStreamProcess(Process):
                         if camera != self.camera.value:
                             break
 
-            logger_info(f'{cno}-camera is offline!')
+            logger_info(f'{cno}-camera is offline, camera url set to {self.camera.value}.')
             self.online.value = 0
             # Wait for some time to try again
             if cap:
