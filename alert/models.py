@@ -37,20 +37,26 @@ class Alert(models.Model):
 
     @classmethod
     def add_alerts(cls, cno=None, img_unmark=None, img=None, predicts=[]):
+        alert_ids = []
+
         try:
             channel = Channel.objects.get(cno=cno)
         except Channel.DoesNotExist as e:
             logger.info('Unknown channel %s' % cno)
-            return
+            return alert_ids
 
         for predict in predicts:
             algorithm = Algorithm.get_algorithm_by_predict(predict)
             if not algorithm:
                 logger.info(f'Unknown algorithm, {cno}, {predict}')
                 continue
-            obj = cls.objects.create(channel=channel, algorithm=algorithm, img_unmark=img_unmark, img=img)
-            if not obj:
-                logger.info(f'Object create failed: {cno}, {predict}')
+            try:
+                obj = cls.objects.create(channel=channel, algorithm=algorithm, img_unmark=img_unmark, img=img)
+                alert_ids.append(obj.id)
+            except Exception as e:
+                logger.info(f'Object create failed: {cno}, {predict}, {e}')
+
+        return alert_ids
 
 
 @receiver(post_save, sender=Alert)

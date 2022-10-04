@@ -13,6 +13,9 @@ from .image_server import ImageServer
 from .image_server_code import *
 from .utils import save_raw_frame
 
+from utils.logutils import get_logger
+logger = get_logger(__file__)
+
 
 class ImageProcessPair:
     def __init__(self, cno, camera):
@@ -109,7 +112,8 @@ class ImageChannelsManager:
                 img = data['data']['img']
                 img_unmark = data['data']['img_unmark']
                 predicts = data['data']['predicts']
-                Alert.add_alerts(cno=cno, img_unmark=img_unmark, img=img, predicts=predicts)
+                alert_ids = Alert.add_alerts(cno=cno, img_unmark=img_unmark, img=img, predicts=predicts)
+                logger.info(f'new alerts added: {alert_ids}')
                 res = {
                     'code': IMG_CODE_SUCCESS,
                     'data': {}
