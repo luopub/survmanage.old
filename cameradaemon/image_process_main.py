@@ -98,6 +98,8 @@ class ImageChannelsManager:
         }
         成功返回code=0
         """
+        logger.info(f'handlers data: {data}')
+
         if not data:
             return None
 
