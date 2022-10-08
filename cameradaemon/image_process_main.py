@@ -168,8 +168,8 @@ class ImageChannelsManager:
                         'code': IMG_CODE_SUCCESS,
                         'data': {'online': not not pp.pw.online.value}
                     }
-        except:
-            pass
+        except Exception as e:
+            logger.warning(f'Exception happened for command: {e}')
         return res
 
     def main_loop(self):
