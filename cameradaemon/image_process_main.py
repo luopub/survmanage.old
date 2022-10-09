@@ -1,13 +1,10 @@
 import time
-import os
-import ctypes
-import json
 from django.conf import settings
 
-from algorithm.models import Algorithm
 from channel.models import Channel, ChannelAlgorithm
 from alert.models import Alert
 
+from .db_keep_alive_thread import DbKeepAliveThread
 from .image_read_process import ImageStreamProcess, ImageConsumeProcess
 from .image_server import ImageServer
 from .image_server_code import *
@@ -98,7 +95,6 @@ class ImageChannelsManager:
         }
         成功返回code=0
         """
-        logger.info(f'handlers data: {data}')
 
         if not data:
             return None
@@ -114,8 +110,7 @@ class ImageChannelsManager:
                 img = data['data']['img']
                 img_unmark = data['data']['img_unmark']
                 predicts = data['data']['predicts']
-                alert_ids = Alert.add_alerts(cno=cno, img_unmark=img_unmark, img=img, predicts=predicts)
-                logger.info(f'new alerts added: {alert_ids}')
+                Alert.add_alerts(cno=cno, img_unmark=img_unmark, img=img, predicts=predicts)
                 res = {
                     'code': IMG_CODE_SUCCESS,
                     'data': {}
@@ -169,7 +164,7 @@ class ImageChannelsManager:
                         'data': {'online': not not pp.pw.online.value}
                     }
         except Exception as e:
-            logger.warning(f'Exception happened for command: {e}')
+            logger.warning(f'Exception happened for command: {type(e)}, {e}')
         return res
 
     def main_loop(self):
@@ -186,6 +181,7 @@ class ImageChannelsManager:
                 continue
             self.set_channel_camera(c.cno, c.url)
 
+        DbKeepAliveThread().start()
         ImageServer.serve(self.handlers)
         # while True:
         #     time.sleep(1)
