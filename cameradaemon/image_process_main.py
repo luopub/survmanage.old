@@ -99,6 +99,12 @@ class ImageChannelsManager:
         if not data:
             return None
 
+        def success_result(data_={}):
+            return {
+                'code': IMG_CODE_SUCCESS,
+                'data': data_
+            }
+
         res = {
             'code': IMG_CODE_INVALID_CMD,
             'data': {}
@@ -111,38 +117,24 @@ class ImageChannelsManager:
                 img_unmark = data['data']['img_unmark']
                 predicts = data['data']['predicts']
                 Alert.add_alerts(cno=cno, img_unmark=img_unmark, img=img, predicts=predicts)
-                res = {
-                    'code': IMG_CODE_SUCCESS,
-                    'data': {}
-                }
+                res = success_result()
             elif cmd == IMG_CMD_GET_LATEST_IMAGE:
                 cno, pp, res = self.get_pp_from_cmd(data)
                 if pp:
-                    res = {
-                        'code': IMG_CODE_SUCCESS,
-                        'data': {
-                            'filename': self.get_latest_image(pp)
-                        }
-                    }
+                    res = success_result(data_={'filename': self.get_latest_image(pp)})
             elif cmd == IMG_CMD_CHANNEL_ALG_CHANGED:
                 cno, pp, res = self.get_pp_from_cmd(data)
                 if pp:
                     cas = ChannelAlgorithm.get_cas_params(pp.cno)
                     pp.pr.set_params(cas)
-                    res = {
-                        'code': IMG_CODE_SUCCESS,
-                        'data': {}
-                    }
+                    res = success_result()
             elif cmd == IMG_CMD_CHANNEL_CONFIGURED:
                 cno, pp, res = self.get_pp_from_cmd(data)
                 if pp:
                     try:
                         channel = Channel.objects.get(cno=cno)
                         pp.pw.change_camera(channel.url)
-                        res = {
-                            'code': IMG_CODE_SUCCESS,
-                            'data': {}
-                        }
+                        res = success_result()
                     except Channel.DoesNotExist:
                         res = {
                             'code': IMG_CODE_CHANNEL_NOT_FOUND,
@@ -152,17 +144,15 @@ class ImageChannelsManager:
                 cno, pp, res = self.get_pp_from_cmd(data)
                 if pp:
                     pp.pw.change_camera('')
-                    res = {
-                        'code': IMG_CODE_SUCCESS,
-                        'data': {}
-                    }
+                    res = success_result()
             elif cmd == IMG_CMD_CHANNEL_GET_ONLINE:
                 cno, pp, res = self.get_pp_from_cmd(data)
                 if pp:
-                    res = {
-                        'code': IMG_CODE_SUCCESS,
-                        'data': {'online': not not pp.pw.online.value}
-                    }
+                    res = success_result(data_={'online': not not pp.pw.online.value})
+            elif cmd == IMG_CMD_DB_KEEP_ALIVE:
+                alert_count = Alert.objects.count()
+                logger.info(f'DbKeepAliveThread, alerts count = {alert_count}')
+                res = success_result()
         except Exception as e:
             logger.warning(f'Exception happened for command: {type(e)}, {e}')
         return res

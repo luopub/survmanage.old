@@ -1,7 +1,9 @@
 import time
 from threading import Thread
 
-from alert.models import Alert
+from cameradaemon.image_client import ImageClient
+
+from .image_server_code import IMG_CMD_DB_KEEP_ALIVE
 
 from utils.logutils import get_logger
 logger = get_logger(__file__)
@@ -18,4 +20,4 @@ class DbKeepAliveThread(Thread):
     def loop():
         while True:
             time.sleep(600)
-            logger.info(f'DbKeepAliveThread, alerts count = {Alert.objects.count()}')
+            ImageClient(IMG_CMD_DB_KEEP_ALIVE).do_request(wait_result=False)

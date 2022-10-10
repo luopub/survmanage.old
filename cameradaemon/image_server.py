@@ -16,7 +16,7 @@ class ImageServerHandler(socketserver.BaseRequestHandler):
         if data:
             data = json.loads(data.decode('utf8'))
 
-            logger.info(f"{self.client_address[0]} request received: {data}, {self.server.handler}")
+            logger.info(f"{self.client_address[0]} request received: {data}")
 
             res = self.server.handler(data)
 
