@@ -1,14 +1,13 @@
 INSERT INTO survmanage.algorithm_algorithm (name,name_ch) VALUES
-	 ('safetyhelmet','安全帽'),
-	 ('vest','反光衣'),
-	 ('fire','火焰'),
-	 ('motor','摩托车'),
-	 ('electomotor','电瓶车'),
-	 ('cigarette','吸烟'),
-	 ('human','人体'),
-	 ('plate','车牌'),
-	 ('mobile','电话'),
-	 ('vehicle','车辆');
-INSERT INTO survmanage.algorithm_algorithm (name,name_ch) VALUES
-	 ('animal','动物'),
-	 ('facemask','口罩');
+	 ('person','人体'),
+	 ('helmet','安全帽'),
+	 ('no helmet','未戴安全帽'),
+	 ('clothing','反光衣'),
+	 ('no clothing','未穿反光衣'),
+	 ('mask','口罩'),
+	 ('no mask','未戴口罩'),
+	 ('smoking','吸烟'),
+	 ('shoes','鞋子'),
+	 ('slippers','拖鞋'),
+	 ('call','打电话'),
+	 ('play phone','玩手机');
