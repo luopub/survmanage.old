@@ -1,14 +1,14 @@
 {
-    "person": "person",
-    "helmet": "helmet",
-    "no helmet": "no helmet",
-    "clothing": "clothing",
-    "no clothing": "no clothing",
-    "mask": "mask",
-    "no mask": "no mask",
-    "smoking": "smoking",
-    "shoes": "shoes",
-    "slippers": "slippers",
-    "call": "call",
-    "play phone": "play phone"
+    "Person": "person",
+    "Helmet": "helmet",
+    "No Helmet": "no helmet",
+    "Clothing": "clothing",
+    "No Clothing": "no clothing",
+    "Mask": "mask",
+    "No Mask": "no mask",
+    "Smoking": "smoking",
+    "Shoes": "shoes",
+    "Slippers": "slippers",
+    "Call": "call",
+    "Play Phone": "play phone"
 }
