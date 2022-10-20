@@ -85,7 +85,11 @@ class BenzhiReportUrl(models.Model):
                 headers[obj.key] = obj.value
 
             for obj in cls.objects.all():
-                requests.post(obj.url, json=data, timeout=10, headers=headers)
+                res = requests.post(obj.url, json=data, timeout=10, headers=headers)
+                if res.status_code == 200:
+                    logger.info(f'Save to benzhi success: {res.json()}')
+                else:
+                    logger.info(f'Send to benzhi failed: {res.status_code}, {res.test}')
         except Exception as e:
             logger.info(f'Error sending alert report: {str(e)}')
             pass
