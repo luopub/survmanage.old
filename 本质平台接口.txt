@@ -1,0 +1,92 @@
+本文档提供的接口根据《AI事件向本质安全管理平台推送统一接口V1.1.doc》提供
+3.1事件类型订阅接⼝
+    URL:  https://cn-nn-dx-1.natfrp.cloud:21435/api/v1/interface/benzhisubcriptions/get_subscription_types/
+    示例数据：
+    {
+        "code": 0,
+        "msg": "Success",
+        "message": "Success",
+        "data": {
+            "ProviderName": "美云数字",
+            "list": [
+                {
+                    "EventType": "person",
+                    "EventTypeName": "人体",
+                    "IsSubscribed": true
+                },
+                {
+                    "EventType": "no helmet",
+                    "EventTypeName": "未戴安全帽",
+                    "IsSubscribed": true
+                },
+                {
+                    "EventType": "no clothing",
+                    "EventTypeName": "未穿反光衣",
+                    "IsSubscribed": true
+                },
+                {
+                    "EventType": "no mask",
+                    "EventTypeName": "未戴口罩",
+                    "IsSubscribed": true
+                },
+                {
+                    "EventType": "smoking",
+                    "EventTypeName": "吸烟",
+                    "IsSubscribed": true
+                },
+                {
+                    "EventType": "shoes",
+                    "EventTypeName": "鞋子",
+                    "IsSubscribed": true
+                },
+                {
+                    "EventType": "slippers",
+                    "EventTypeName": "拖鞋",
+                    "IsSubscribed": true
+                },
+                {
+                    "EventType": "play phone",
+                    "EventTypeName": "玩手机",
+                    "IsSubscribed": true
+                }
+            ]
+        }
+    }
+
+3.2报警摄像头基础数据获得接⼝
+    URL: https://cn-nn-dx-1.natfrp.cloud:21435/api/v1/interface/benzhisubcriptions/get_subscription_cameras/
+    示例数据：
+    {
+        "code": 0,
+        "msg": "Success",
+        "message": "Success",
+        "data": {
+            "ProviderName": "美云数字",
+            "list": [
+                {
+                    "cameraId": "85419bee1a12366c775708fdce97979e",
+                    "name": "美云数字",
+                    "installLocation": "中山市",
+                    "longitude": "",
+                    "latitude": "",
+                    "createTime": "2022-10-17 12:33:43",
+                    "updateTime": "2022-10-17 12:33:43",
+                    "projectName": "美云数字",
+                    "regionName": "",
+                    "regionPathName": ""
+                },
+                {
+                    "cameraId": "6d4bd313450f047201cbf76c9f710aa2",
+                    "name": "联旺大厦1",
+                    "installLocation": "马路边",
+                    "longitude": "",
+                    "latitude": "",
+                    "createTime": "2022-10-20 17:21:21",
+                    "updateTime": "2022-10-20 17:21:21",
+                    "projectName": "美云数字",
+                    "regionName": "",
+                    "regionPathName": ""
+                }
+            ]
+        }
+    }

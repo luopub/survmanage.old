@@ -22,12 +22,17 @@ class BenzhiSubscriptionViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleVi
     authentication_classes = []
     permission_classes = []
 
+    @action(detail=False, methods=['post'])
+    def subscribe_all(self, request):
+        self.model.on_activated()
+        return Response({})
+
     @action(detail=False, methods=['get', 'post'])
     def get_subscription_types(self, request):
         provider_name = BenzhiProvider.objects.first().provider_name
-        subscptions = self.model.objects.all().values('algorithm__event_type', 'algorithm__name_ch', 'is_subscribed')
+        subscptions = self.model.objects.all().values('algorithm__name', 'algorithm__event_type', 'algorithm__name_ch', 'is_subscribed')
         subscptions = list(map(lambda x: {
-            'EventType': x['algorithm__event_type'],
+            'EventType': x['algorithm__name'],  # x['algorithm__event_type'],
             'EventTypeName': x['algorithm__name_ch'],
             'IsSubscribed': x['is_subscribed']
         }, subscptions))
