@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 import requests
+import json
 
 from algorithm.models import MAX_ALGORITHM_NAME_LEN, Algorithm
 from alert.models import Alert
@@ -85,6 +86,7 @@ class BenzhiReportUrl(models.Model):
                 headers[obj.key] = obj.value
 
             for obj in cls.objects.all():
+                logger.info(f'Reporting to benzhi: {json.dumps(data, indent=2)}')
                 res = requests.post(obj.url, json=data, timeout=10, headers=headers)
                 if res.status_code == 200:
                     logger.info(f'Save to benzhi success: {res.json()}')

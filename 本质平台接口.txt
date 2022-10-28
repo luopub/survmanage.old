@@ -10,11 +10,6 @@
             "ProviderName": "美云数字",
             "list": [
                 {
-                    "EventType": "person",
-                    "EventTypeName": "人体",
-                    "IsSubscribed": true
-                },
-                {
                     "EventType": "no helmet",
                     "EventTypeName": "未戴安全帽",
                     "IsSubscribed": true
@@ -45,6 +40,11 @@
                     "IsSubscribed": true
                 },
                 {
+                    "EventType": "call",
+                    "EventTypeName": "打电话",
+                    "IsSubscribed": true
+                },
+                {
                     "EventType": "play phone",
                     "EventTypeName": "玩手机",
                     "IsSubscribed": true
@@ -64,25 +64,13 @@
             "ProviderName": "美云数字",
             "list": [
                 {
-                    "cameraId": "85419bee1a12366c775708fdce97979e",
-                    "name": "美云数字",
-                    "installLocation": "中山市",
+                    "cameraId": "0d0bf5ae8df41740c5f9896774a51133",
+                    "name": "南中TJ04-气瓶存放区",
+                    "installLocation": "南中4标TJ04",
                     "longitude": "",
                     "latitude": "",
-                    "createTime": "2022-10-17 12:33:43",
-                    "updateTime": "2022-10-17 12:33:43",
-                    "projectName": "美云数字",
-                    "regionName": "",
-                    "regionPathName": ""
-                },
-                {
-                    "cameraId": "6d4bd313450f047201cbf76c9f710aa2",
-                    "name": "联旺大厦1",
-                    "installLocation": "马路边",
-                    "longitude": "",
-                    "latitude": "",
-                    "createTime": "2022-10-20 17:21:21",
-                    "updateTime": "2022-10-20 17:21:21",
+                    "createTime": "2022-10-20 18:45:23",
+                    "updateTime": "2022-10-20 18:46:03",
                     "projectName": "美云数字",
                     "regionName": "",
                     "regionPathName": ""
