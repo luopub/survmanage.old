@@ -75,7 +75,7 @@ class BenzhiReportUrl(models.Model):
                 'alertTime_end': dt.strftime('%Y-%m-%d %H:%M:%S'),
                 'alertPic_URL': None,
                 'alertPic_base64': image_to_data_url(settings.ALERT_IMAGE_DIR.joinpath(alert.img)),
-                'eventTypeCode': alert.algorithm.event_type,
+                'eventTypeCode': alert.algorithm.name,
                 'eventTypeName': alert.algorithm.name_ch,
                 'eventLevelName': None,
                 'eventLocation': alert.channel.site
