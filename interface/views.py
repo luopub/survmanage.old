@@ -12,6 +12,10 @@ from system.models import ProjectInfo
 from .models import *
 
 
+class BenzhiReportUrlViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
+    model = BenzhiReportUrl
+
+
 class BenzhiSubscriptionViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = BenzhiSubscription
 
@@ -79,3 +83,4 @@ class BenzhiSubscriptionViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleVi
 
 router = routers.DefaultRouter()
 router.register('benzhisubcriptions', BenzhiSubscriptionViewSet)
+router.register('benzhireporturls', BenzhiReportUrlViewSet)
