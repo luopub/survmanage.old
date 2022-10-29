@@ -12,10 +12,6 @@ from system.models import ProjectInfo
 from .models import *
 
 
-class BenzhiProviderViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
-    model = BenzhiProvider
-
-
 class BenzhiSubscriptionViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = BenzhiSubscription
 
@@ -29,7 +25,7 @@ class BenzhiSubscriptionViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleVi
 
     @action(detail=False, methods=['get', 'post'])
     def get_subscription_types(self, request):
-        provider_name = BenzhiProvider.objects.first().provider_name
+        provider_name = BenzhiReportUrl.objects.first().provider_name
         subscptions = self.model.objects.all().values('algorithm__name', 'algorithm__event_type', 'algorithm__name_ch', 'is_subscribed')
         subscptions = list(map(lambda x: {
             'EventType': x['algorithm__name'],  # x['algorithm__event_type'],
@@ -63,7 +59,7 @@ class BenzhiSubscriptionViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleVi
             }
         }
         """
-        provider_name = BenzhiProvider.objects.first().provider_name
+        provider_name = BenzhiReportUrl.objects.first().provider_name
         project_name = ProjectInfo.objects.first().project_name
         channels = Channel.objects.all()
         data = [{
@@ -81,11 +77,5 @@ class BenzhiSubscriptionViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleVi
         return Response({'ProviderName': provider_name, 'list': data})
 
 
-class BenzhiMetadataViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
-    model = BenzhiMetadata
-
-
 router = routers.DefaultRouter()
-router.register('benzhiproviders', BenzhiProviderViewSet)
 router.register('benzhisubcriptions', BenzhiSubscriptionViewSet)
-router.register('benzhimetadatas', BenzhiMetadataViewSet)

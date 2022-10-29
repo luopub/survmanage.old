@@ -18,10 +18,6 @@ MAX_KEY_LEN = 32
 MAX_VALUE_LEN = 32
 
 
-class BenzhiProvider(models.Model):
-    provider_name = models.CharField(max_length=MAX_PROVIDER_NAME_LEN, unique=True, verbose_name='ProviderName')
-
-
 class BenzhiSubscription(models.Model):
     algorithm = models.OneToOneField(Algorithm, on_delete=models.CASCADE)
     is_subscribed = models.BooleanField(default=True)
@@ -41,13 +37,11 @@ class BenzhiSubscription(models.Model):
 Algorithm.add_activation_handler(BenzhiSubscription.on_activated)
 
 
-class BenzhiMetadata(models.Model):
-    key = models.CharField(max_length=MAX_KEY_LEN, unique=True)
-    value = models.CharField(max_length=MAX_VALUE_LEN)
-
-
 class BenzhiReportUrl(models.Model):
-    url = models.URLField(unique=True)
+    url = models.URLField(unique=True, verbose_name='URL to Report Alert')
+    provider_name = models.CharField(max_length=MAX_PROVIDER_NAME_LEN, default='美云数字', verbose_name='ProviderName')
+    enabled = models.BooleanField(default=True, verbose_name='Report Enabled')
+    metadata = models.CharField(max_length=2048, null=True, verbose_name='Metadata (key, value) pairs in JSON format')
 
     @classmethod
     def send_alert(cls, alert):
@@ -55,29 +49,28 @@ class BenzhiReportUrl(models.Model):
             if not BenzhiSubscription.objects.get(algorithm=alert.algorithm).is_subscribed:
                 return
 
-            if cls.objects.all().count() == 0:
-                return
+            for obj in cls.objects.filter(enabled=True):
 
-            dt = datetime_utc_to_local(alert.date_time)
-            data = {
-                'eventId': alert.id,
-                'cameraId': alert.channel.cid,
-                'cameraId_url': alert.channel.url,
-                'alertTime_begin': dt.strftime('%Y-%m-%d %H:%M:%S'),
-                'alertTime_end': dt.strftime('%Y-%m-%d %H:%M:%S'),
-                'alertPic_URL': None,
-                'alertPic_base64': image_to_data_url(settings.ALERT_IMAGE_DIR.joinpath(alert.img)),
-                'eventTypeCode': alert.algorithm.name,
-                'eventTypeName': alert.algorithm.name_ch,
-                'eventLevelName': None,
-                'eventLocation': alert.channel.site
-            }
+                dt = datetime_utc_to_local(alert.date_time)
+                data = {
+                    'eventId': alert.id,
+                    'cameraId': alert.channel.cid,
+                    'cameraId_url': alert.channel.url,
+                    'alertTime_begin': dt.strftime('%Y-%m-%d %H:%M:%S'),
+                    'alertTime_end': dt.strftime('%Y-%m-%d %H:%M:%S'),
+                    'alertPic_URL': None,
+                    'alertPic_base64': image_to_data_url(settings.ALERT_IMAGE_DIR.joinpath(alert.img)),
+                    'eventTypeCode': alert.algorithm.name,
+                    'eventTypeName': alert.algorithm.name_ch,
+                    'eventLevelName': None,
+                    'eventLocation': alert.channel.site
+                }
 
-            headers = {}
-            for obj in BenzhiMetadata.objects.all():
-                headers[obj.key] = obj.value
+                if obj.metadata:
+                    headers = json.loads(obj.metadata)
+                else:
+                    headers = {}
 
-            for obj in cls.objects.all():
                 logger.info(f'Reporting to benzhi: {json.dumps(data, indent=2)}')
                 res = requests.post(obj.url, json=data, timeout=10, headers=headers)
                 if res.status_code == 200:
