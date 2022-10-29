@@ -16,6 +16,7 @@ MAX_EVENT_TYPE_NAME_LEN = 32
 MAX_PROVIDER_NAME_LEN = 32
 MAX_KEY_LEN = 32
 MAX_VALUE_LEN = 32
+MAX_REPORT_META_LEN = 2048
 
 
 class BenzhiSubscription(models.Model):
@@ -39,9 +40,10 @@ Algorithm.add_activation_handler(BenzhiSubscription.on_activated)
 
 class BenzhiReportUrl(models.Model):
     url = models.URLField(unique=True, verbose_name='URL to Report Alert')
+    platform_name = models.CharField(max_length=MAX_PROVIDER_NAME_LEN, default='本质', verbose_name='Report Platform Name')
     provider_name = models.CharField(max_length=MAX_PROVIDER_NAME_LEN, default='美云数字', verbose_name='ProviderName')
     enabled = models.BooleanField(default=True, verbose_name='Report Enabled')
-    metadata = models.CharField(max_length=2048, null=True, verbose_name='Metadata (key, value) pairs in JSON format')
+    metadata = models.CharField(max_length=MAX_REPORT_META_LEN, null=True, verbose_name='Metadata (key, value) pairs in JSON format')
 
     @classmethod
     def send_alert(cls, alert):
