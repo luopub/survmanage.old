@@ -41,14 +41,6 @@ class BenzhiSubscription(models.Model):
 Algorithm.add_activation_handler(BenzhiSubscription.on_activated)
 
 
-class BenzhiEventToAlgorithm(models.Model):
-    event_type = models.CharField(max_length=MAX_EVENT_TYPE_LEN)
-    algorithm = models.CharField(max_length=MAX_ALGORITHM_NAME_LEN)
-
-    class Meta:
-        unique_together = (('event_type', 'algorithm'),)
-
-
 class BenzhiMetadata(models.Model):
     key = models.CharField(max_length=MAX_KEY_LEN, unique=True)
     value = models.CharField(max_length=MAX_VALUE_LEN)
