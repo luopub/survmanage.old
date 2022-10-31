@@ -379,5 +379,32 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
         return Response({})
 
 
+class UserViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
+    model = User
+
+    @action(detail=False, methods=['post'])
+    def logout(self, request):
+        try:
+            Token.objects.filter(user=request.user).delete()
+        except:
+            pass
+
+        return Response({})
+
+    @action(detail=False, methods=['post'])
+    def change_password(self, request):
+        old_password = request.data.get('old_password')
+        new_password = request.data.get('new_password')
+        if not request.user.check_password(old_password):
+            raise CodeMsgException(ErrorCode.INVALID_PASSWORD, '旧密码错误')
+        try:
+            request.user.set_password(new_password)
+            request.user.save()
+        except:
+            raise CodeMsgException(ErrorCode.INVALID_PASSWORD, '新密码格式不正确')
+        return Response({})
+
+
 router = routers.DefaultRouter()
 router.register('projectinfos', ProjectInfoViewSet)
+router.register('users', UserViewSet)
