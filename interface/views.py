@@ -75,7 +75,7 @@ class BenzhiSubscriptionViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleVi
             'createTime': datetime_utc_to_local(x.create_time).strftime('%Y-%m-%d %H:%M:%S'),
             'updateTime': datetime_utc_to_local(x.update_time).strftime('%Y-%m-%d %H:%M:%S'),
             'projectName': project_name,
-            'regionName': '',
+            'regionName': x.site,
             'regionPathName': ''
         } for x in channels]
         return Response({'ProviderName': provider_name, 'list': data})
