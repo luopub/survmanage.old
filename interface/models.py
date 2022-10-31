@@ -65,7 +65,7 @@ class BenzhiReportUrl(models.Model):
                     'eventTypeCode': alert.algorithm.name,
                     'eventTypeName': alert.algorithm.name_ch,
                     'eventLevelName': '低',
-                    'eventLocation': alert.channel.site
+                    'enventLocation': alert.channel.site  # event was wrong to envent
                 }
 
                 if obj.metadata:
