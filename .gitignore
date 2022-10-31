@@ -132,6 +132,6 @@ dmypy.json
 rundata/
 
 ajax-hook/
-static/images/
+#static/images/
 loggings_cd/
 loggings/
