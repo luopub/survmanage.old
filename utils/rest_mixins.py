@@ -59,6 +59,10 @@ class GroupbyMixin:
 
         queryset = self.get_queryset()
 
+        # 当数据为空, annotation 字段不存在，会导致Exception
+        if queryset.count() == 0:
+            return []
+
         queryset = self.custom_transform(queryset)
 
         queryset = self.filter_queryset(queryset)
