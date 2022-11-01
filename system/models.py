@@ -8,6 +8,9 @@ from utils.error_code import ErrorCode
 MAX_PROJECT_NAME_LEN = 32
 MAX_AUTH_CODE_LEN = 32
 
+MAX_IMAGE_NAME_LEN = 64
+MAX_IMAGE_FILE_LEN = 256
+
 
 class ProjectInfo(models.Model):
     """
@@ -76,3 +79,11 @@ class ProjectInfo(models.Model):
         if not auth_code or len(auth_code) != MAX_AUTH_CODE_LEN or cls.objects.filter(auth_code=auth_code).count() > 0:
             return False
         return True
+
+
+class ImageIcon(models.Model):
+    """
+    保存算法和系统图片、图表
+    """
+    name = models.CharField(max_length=MAX_IMAGE_NAME_LEN, unique=True, verbose_name='图片/图标名称')
+    file_name = models.CharField(max_length=MAX_IMAGE_FILE_LEN, verbose_name='文件名称, 可以在/static/images获取')
