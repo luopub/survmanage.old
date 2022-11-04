@@ -146,11 +146,6 @@ DYNAMIC_DATA_PATH = os.environ.get('DYNAMIC_DATA_PATH')
 DYNAMIC_FILE_DIR = (DYNAMIC_DATA_PATH and Path(DYNAMIC_DATA_PATH)) or BASE_DIR.parent.joinpath('dynamic')
 ALERT_IMAGE_DIR = DYNAMIC_FILE_DIR.joinpath('images')
 
-STATICFILES_DIRS = [
-    Path(BASE_DIR).joinpath('static'),
-    DYNAMIC_FILE_DIR
-]
-
 try:
     ALERT_IMAGE_DIR.mkdir(parents=True)
 except:
@@ -201,8 +196,10 @@ UPGRADE_FLAG_FILE = os.environ.get('UPGRADE_FLAG_FILE') or DYNAMIC_FILE_DIR.join
 RESET_FLAG_FILE = os.environ.get('RESET_FLAG_FILE') or DYNAMIC_FILE_DIR.joinpath('reset_flag')
 
 UPLOAD_FILE_DIR = os.environ.get('UPLOAD_FILE_DIR') or DYNAMIC_FILE_DIR.joinpath('upload')
+UPLOAD_IMAGE_DIR = UPLOAD_FILE_DIR.joinpath('images')
 try:
-    UPLOAD_FILE_DIR.mkdir(parents=False)
+    UPLOAD_IMAGE_DIR.mkdir(parents=True)
+    UPLOAD_FILE_DIR.mkdir(parents=True)
 except:
     pass
 
@@ -214,3 +211,9 @@ if not NETPLAN_CONFIG_DIR.exists():
 
 NETWORK_CONFIG_ETH0 = NETPLAN_CONFIG_DIR.joinpath('01-netcfg.yaml')
 NETWORK_CONFIG_WLAN0 = NETPLAN_CONFIG_DIR.joinpath('02-netcfg.yaml')
+
+STATICFILES_DIRS = [
+    Path(BASE_DIR).joinpath('static'),
+    DYNAMIC_FILE_DIR,
+    UPLOAD_FILE_DIR
+]

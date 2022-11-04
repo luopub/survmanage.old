@@ -87,3 +87,7 @@ class ImageIcon(models.Model):
     """
     name = models.CharField(max_length=MAX_IMAGE_NAME_LEN, unique=True, verbose_name='图片/图标名称')
     file_name = models.CharField(max_length=MAX_IMAGE_FILE_LEN, verbose_name='文件名称, 可以在/static/images获取')
+
+    @classmethod
+    def save_or_update(cls, name, file_name):
+        cls.objects.update_or_create(name=name, defaults={'file_name': file_name})

@@ -1,6 +1,7 @@
-import platform
+import pathlib
 import os
 import gc
+import tempfile
 from django.contrib.auth.models import User
 from rest_framework import routers
 from rest_framework.decorators import action
@@ -20,6 +21,34 @@ from system.models import ProjectInfo
 class UploadViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = ProjectInfo  # This is only a placeholder, so do not worry
     # parser_classes = [*super().parser_classes, FileUploadParser]
+
+    @action(detail=False, methods=['post'])
+    def common(self, request):
+        """
+        Upload a chunk of file
+        """
+        files = request.FILES.getlist('file_field')
+        file = files[0]
+        filename = request.data.get('filename')
+        if '.' not in filename:
+            raise CodeMsgException(ErrorCode.UNKNOWN_FILE_TYPE, '未知文件类型')
+
+        tfd, tmppath = tempfile.mkstemp(suffix='.' + filename.split('.')[-1], dir=settings.UPLOAD_IMAGE_DIR)
+        with os.fdopen(tfd, 'wb') as f:
+            for chunk in file.chunks():
+                f.write(chunk)
+
+        tmppath = pathlib.Path(tmppath).resolve()
+        digest = get_file_digest(tmppath)
+
+        new_name = digest + '.' + filename.split('.')[-1]
+        filepath = settings.UPLOAD_IMAGE_DIR.joinpath(new_name)
+        if filepath.exists():
+            tmppath.unlink()
+        else:
+            tmppath.rename(filepath)
+
+        return Response({'filename': new_name})
 
     @action(detail=False, methods=['post'])
     def chunk(self, request):

@@ -408,6 +408,17 @@ class UserViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
 class ImageIconViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = ImageIcon
 
+    @action(detail=False, methods=['post'])
+    def save_or_update(self, request):
+        name = request.data.get('name')
+        file_name = request.data.get('file_name')
+        if not name or not file_name:
+            raise CodeMsgException(ErrorCode.INVALID_ICON_OR_FILE, '名称为空')
+
+        self.model.save_or_update(name, file_name)
+        return Response({})
+
+
 
 router = routers.DefaultRouter()
 router.register('projectinfos', ProjectInfoViewSet)
