@@ -11,6 +11,9 @@ MAX_AUTH_CODE_LEN = 32
 MAX_IMAGE_NAME_LEN = 64
 MAX_IMAGE_FILE_LEN = 256
 
+MAX_PLATFORM_NAME_LEN = 64
+MAX_COPYRIGHT_LEN = 512
+
 
 class ProjectInfo(models.Model):
     """
@@ -91,3 +94,11 @@ class ImageIcon(models.Model):
     @classmethod
     def save_or_update(cls, name, file_name):
         cls.objects.update_or_create(name=name, defaults={'file_name': file_name})
+
+
+class SystemInfo(models.Model):
+    """
+    保存基本的系统信息
+    """
+    platform_name = models.CharField(max_length=MAX_PLATFORM_NAME_LEN, verbose_name='平台名称')
+    copyright = models.CharField(max_length=MAX_COPYRIGHT_LEN, verbose_name='版权信息')

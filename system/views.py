@@ -17,7 +17,7 @@ from channel.models import Channel, ChannelAlgorithm
 from algorithm.models import Algorithm, AlgorithmDefaultParameters
 from alert.models import Alert
 
-from .models import ProjectInfo, ImageIcon
+from .models import ProjectInfo, ImageIcon, SystemInfo
 
 from . import deviceinfo
 
@@ -419,8 +419,13 @@ class ImageIconViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase
         return Response({})
 
 
+class SystemInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
+    model = SystemInfo
+
 
 router = routers.DefaultRouter()
 router.register('projectinfos', ProjectInfoViewSet)
 router.register('users', UserViewSet)
 router.register('imageicons', ImageIconViewSet)
+router.register('systeminfos', SystemInfoViewSet)
+
