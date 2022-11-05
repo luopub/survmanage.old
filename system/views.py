@@ -13,6 +13,7 @@ from utils.rest_mixins import GroupbyMixin
 from utils.rest_utils import MyModelViewSet, SimpleViewSetBase
 from utils.error_code import ErrorCode
 from utils.code_message_exception import CodeMsgException
+from utils.datetime_utils import datetime_utc_iso8601
 
 from channel.models import Channel, ChannelAlgorithm
 from algorithm.models import Algorithm, AlgorithmDefaultParameters
@@ -21,6 +22,9 @@ from alert.models import Alert
 from .models import ProjectInfo, ImageIcon, SystemInfo
 
 from . import deviceinfo
+
+from utils.logutils import get_logger
+logger = get_logger(__file__)
 
 
 class NetworkSetting:
@@ -436,6 +440,17 @@ class ImageIconViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase
 
 class SystemInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = SystemInfo
+
+    @action(detail=False, methods=['get'])
+    def get_system_datetime(self, request):
+        return Response({'datetime': datetime_utc_iso8601()})
+
+    @action(detail=False, methods=['post'])
+    def set_system_datetime(self, request):
+        datetime = request.data.get('datetime')
+        if datetime:
+            logger.info(f'set_system_datetime: {datetime}')
+        return Response({})
 
 
 router = routers.DefaultRouter()
