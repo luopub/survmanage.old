@@ -14,6 +14,7 @@ from utils.rest_utils import MyModelViewSet, SimpleViewSetBase
 from utils.error_code import ErrorCode
 from utils.code_message_exception import CodeMsgException
 from utils.datetime_utils import datetime_utc_iso8601
+from utils.docker_utils import run_host_cmd
 
 from channel.models import Channel, ChannelAlgorithm
 from algorithm.models import Algorithm, AlgorithmDefaultParameters
@@ -449,8 +450,16 @@ class SystemInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBas
     def set_system_datetime(self, request):
         datetime = request.data.get('datetime')
         if datetime:
+            cmd = f'date -s {datetime}; hwclock --systohc; shutdown -r now;'
+            run_host_cmd(cmd)
             logger.info(f'set_system_datetime: {datetime}')
         return Response({})
+
+    @action(detail=False, methods=['post'])
+    def run_host_cmd(self, request):
+        cmd = request.data.get('cmd')
+        std_res = run_host_cmd(cmd)
+        return Response(std_res)
 
 
 router = routers.DefaultRouter()
