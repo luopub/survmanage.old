@@ -449,16 +449,20 @@ class SystemInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBas
     @action(detail=False, methods=['post'])
     def set_system_datetime(self, request):
         datetime = request.data.get('datetime')
+        logger.info(f'set_system_datetime: {datetime}')
         if datetime:
             cmd = f'date -s {datetime}; hwclock --systohc; shutdown -r now;'
-            run_host_cmd(cmd)
-            logger.info(f'set_system_datetime: {datetime}')
+            if settings.IS_DEPLOYED:
+                run_host_cmd(cmd)
         return Response({})
 
     @action(detail=False, methods=['post'])
     def run_host_cmd(self, request):
         cmd = request.data.get('cmd')
-        std_res = run_host_cmd(cmd)
+        if settings.IS_DEPLOYED:
+            std_res = run_host_cmd(cmd)
+        else:
+            std_res = {}
         return Response(std_res)
 
 
