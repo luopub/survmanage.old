@@ -19,6 +19,8 @@ services:
   survmanage:
     image:
       survmanage:latest
+    pid: host
+    privileged: true
     ports:
       - "6789:6789"
     volumes:
