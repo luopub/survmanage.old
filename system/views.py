@@ -1,5 +1,6 @@
 import platform
 import os
+import pathlib
 from ruamel.yaml import YAML
 from django.contrib.auth.models import User
 from rest_framework import routers
@@ -417,6 +418,20 @@ class ImageIconViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase
 
         self.model.save_or_update(name, file_name)
         return Response({})
+
+    @action(detail=False, methods=['get'])
+    def get_all_icon_images(self, request):
+        image_paths = [
+            pathlib.Path(settings.BASE_DIR).joinpath('static').joinpath('images'),
+            settings.UPLOAD_IMAGE_DIR
+        ]
+        image_types = ['*.jpg', '*.png', '*.JPG', '*.PNG']
+        images = []
+        for ip in image_paths:
+            for it in image_types:
+                files = ip.glob(it)
+                images.extend(map(lambda x: x.name, files))
+        return Response({'names': images})
 
 
 class SystemInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
