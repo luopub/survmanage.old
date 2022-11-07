@@ -81,7 +81,7 @@ services:
       - MYSQL_PORT=3306
       - IMAGESERVER_HOST=imageserver
       - IMAGESERVER_PORT=6790
-      - MODEL_PATH=/checkpoints/best-20221028.pt
+      # - MODEL_PATH=/checkpoints/best-20221028.pt
       - MODEL_DEVICE=cuda:1
       - DYNAMIC_DATA_PATH=/dynamic_data
       - MAX_CAMERA=8

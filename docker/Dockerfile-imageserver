@@ -12,11 +12,13 @@ RUN python3 -m pip install -r requirements-imageserver.txt -i https://pypi.tuna.
 RUN export PATH=/usr/local/lib/python3.8/dist-packages:$PATH
 RUN cp -R  /usr/local/lib/python3.8/dist-packages/opencv_python.libs /usr/lib/python3.8/dist-packages
 
-RUN mkdir /checkpoints
-COPY yolov5-6.1-checkpoints /checkpoints
+# checkpoints are in the source directory now
+# RUN mkdir /checkpoints
+# COPY yolov5-6.1-checkpoints /checkpoints
 
 RUN mkdir /survmanage
 COPY survmanage /survmanage
 RUN chmod +x /survmanage/docker/startimageserver.sh
+
 # Note: startimageserver.sh file should not have line ending CRLF!!!
 CMD /survmanage/docker/startimageserver.sh
