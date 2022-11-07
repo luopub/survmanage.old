@@ -362,13 +362,13 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
 
     @action(detail=False, methods=['post'])
     def factory_reset(self, request):
-        Alert.delete_all()
-        ChannelAlgorithm.delete_all()
-        Channel.delete_all()
-        Algorithm.delete_all()
-        AlgorithmDefaultParameters.delete_all()
-        ProjectInfo.delete_all()
-        User.objects.all().delete()
+        # Alert.delete_all()
+        # ChannelAlgorithm.delete_all()
+        # Channel.delete_all()
+        # Algorithm.delete_all()
+        # AlgorithmDefaultParameters.delete_all()
+        # ProjectInfo.delete_all()
+        # User.objects.all().delete()
         self.delete_all_data()
 
         self.start_reset_device(True)

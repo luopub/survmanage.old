@@ -60,7 +60,7 @@ function networks_upgrade() {
     docker tag ${REPO_NAME}/survmanagenginx:latest survmanagenginx:latest
 
     echo Removing not used images ...
-    sudo docker image ls | grep "<none>" | awk '{print $3;}' | xargs sudo docker image rm
+    docker image ls | grep "<none>" | awk '{print $3;}' | xargs docker image rm
 
     copy_docker_files
 
@@ -75,6 +75,46 @@ function reset_device () {
 
 function hard_reset_device () {
     echo Hard reset system ...
+
+    cd "$working_dir"
+
+    docker compose down
+    docker compose rm -f
+
+    sleep 5
+
+    # run mysql alone
+    nohup docker compose run mysqlsurv > /dev/null 2>&1 &
+
+    sleep 10
+
+    # Drop the database
+    docker exec -it $(docker ps -a | grep mysql | grep 3306 | awk '{print $1}') mysql --password=12345678 -e "drop database if exists survmanage;"
+
+    sleep 5
+
+    # Create the empty database
+    docker exec -it $(docker ps -a | grep mysql | grep 3306 | awk '{print $1}') mysql --password=12345678 -e "create database survmanage;"
+
+    sleep 5
+
+    # shutdown mysql and run all images
+    docker container stop $(docker ps -a | grep mysql | grep 3306 | awk '{print $1}')
+
+    sleep 5
+
+    docker container prune --force
+
+    # start docker, "python manage.py migrate" will run automatic
+    nohup docker compose up > /dev/null 2>&1 &
+
+    sleep 20
+
+    # load default data
+    docker exec -it $(docker ps -a | grep survmanage | grep 6789 | awk '{print $1}') /bin/bash -c "cd /survmanage && python manage.py loaddata initdata/benzhireporturl_default.json"
+    docker exec -it $(docker ps -a | grep survmanage | grep 6789 | awk '{print $1}') /bin/bash -c "cd /survmanage && python manage.py loaddata initdata/imageicon_defaults.json"
+    docker exec -it $(docker ps -a | grep survmanage | grep 6789 | awk '{print $1}') /bin/bash -c "cd /survmanage && python manage.py loaddata initdata/systeminfo_default.json"
+
     reset_device
 }
 
@@ -83,7 +123,7 @@ function manual_upgrade () {
 
   echo Copy upgrade from docker to local
   cd "$working_dir"
-  sudo docker compose cp "survmanage:$1" /tmp
+  docker compose cp "survmanage:$1" /tmp
 
   filename=$(basename "$1")
   directory=$(basename "$filename" .tar)
@@ -96,40 +136,40 @@ function manual_upgrade () {
     exit 1
   fi
 
-  sudo rm -rf "$upgrade_file_dir"
+  rm -rf "$upgrade_file_dir"
 
   echo Extracting tarball ...
-  sudo tar xf "$upgrade_file_path" -C /tmp
+  tar xf "$upgrade_file_path" -C /tmp
 
-  sudo chmod -R +r "$upgrade_file_dir"
+  chmod -R +r "$upgrade_file_dir"
 
   echo Shutdown running containers ...
   # 先关闭原来的compose
   cd "$working_dir"
-  sudo docker compose down
-  sudo docker compose rm -f
+  docker compose down
+  docker compose rm -f
 
   echo Removing old version...
-  sudo docker image rm -f survmanage:latest
-  sudo docker image rm -f imageserver:latest
-  sudo docker image rm -f survmanagenginx:latest
+  docker image rm -f survmanage:latest
+  docker image rm -f imageserver:latest
+  docker image rm -f survmanagenginx:latest
 
   echo Load new images from tarball ...
   cd "$upgrade_file_dir"
-  sudo docker load -i survmanage-latest.tar
-  sudo docker load -i imageserver-latest.tar
-  sudo docker load -i survmanagenginx-latest.tar
+  docker load -i survmanage-latest.tar
+  docker load -i imageserver-latest.tar
+  docker load -i survmanagenginx-latest.tar
 
   echo Removing not used images ...
-  sudo docker image ls | grep "<none>" | awk '{print $3;}' | xargs sudo docker image rm
+  docker image ls | grep "<none>" | awk '{print $3;}' | xargs docker image rm
 
   echo Remove the temp folder ...
-  sudo rm -rf "$upgrade_file_dir"
+  rm -rf "$upgrade_file_dir"
 
   copy_docker_files
 
   echo Upgrade done. Retart system ...
-  sudo shutdown -r now
+  shutdown -r now
 
 }
 
