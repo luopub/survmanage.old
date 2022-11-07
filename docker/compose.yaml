@@ -53,7 +53,8 @@ services:
       - IMAGESERVER_PORT=6790
       - DYNAMIC_DATA_PATH=/dynamic_data
       - UPGRADE_FLAG_FILE=/docker/upgrade_flag
-      - RESET_FLAG_FILE=/docker/reset_flag
+      - RESET_FLAG_FILE=/docker/reset_flag_file
+      - HARD_RESET_FLAG_FILE=/docker/hard_reset_flag_file
       - HOSTINFO_ROOT=/hostinfo
 
   imageserver:

@@ -4,7 +4,8 @@ REPO_NAME=docker20190707
 # Must start from /docker
 working_dir=/docker
 upgrade_flag_file=${working_dir}/upgrade_flag
-reset_flag_file=${working_dir}/reset_flag
+reset_flag_file=${working_dir}/reset_flag_file
+hard_reset_flag_file=${working_dir}/hard_reset_flag_file
 
 function copy_docker_files() {
     cd "$working_dir"
@@ -70,6 +71,11 @@ function networks_upgrade() {
 function reset_device () {
     echo Retart system ...
     shutdown -r now
+}
+
+function hard_reset_device () {
+    echo Hard reset system ...
+    reset_device
 }
 
 function manual_upgrade () {
@@ -143,6 +149,11 @@ while true; do
     rm ${reset_flag_file}
 
     reset_device
+  elif [ -f ${hard_reset_flag_file} ]; then
+    echo Found hard reset flag file ${hard_reset_flag_file}
+    rm ${hard_reset_flag_file}
+
+    hard_reset_device
   fi
   sleep 10
 done

@@ -328,8 +328,12 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
         return Response({})
 
     @staticmethod
-    def start_reset_device():
-        with open(settings.RESET_FLAG_FILE, 'wt') as f:
+    def start_reset_device(hard_reset=False):
+        if hard_reset:
+            flag_file = settings.HARD_RESET_FLAG_FILE
+        else:
+            flag_file = settings.RESET_FLAG_FILE
+        with open(flag_file, 'wt') as f:
             f.write('start reset')
 
     @action(detail=False, methods=['post'])
@@ -367,8 +371,7 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
         User.objects.all().delete()
         self.delete_all_data()
 
-        with open(settings.RESET_FLAG_FILE, 'wt') as f:
-            f.write('start reset')
+        self.start_reset_device(True)
 
         return Response({})
 
