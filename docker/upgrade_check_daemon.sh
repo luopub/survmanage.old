@@ -119,6 +119,8 @@ function hard_reset_device () {
     docker exec -it $(docker ps -a | grep survmanage | grep 6789 | awk '{print $1}') /bin/bash -c "cd /survmanage && python manage.py loaddata initdata/imageicon_defaults.json"
     docker exec -it $(docker ps -a | grep survmanage | grep 6789 | awk '{print $1}') /bin/bash -c "cd /survmanage && python manage.py loaddata initdata/systeminfo_default.json"
 
+    sleep 5
+
     reset_device
 }
 
