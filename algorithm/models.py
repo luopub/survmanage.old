@@ -61,11 +61,6 @@ class Algorithm(models.Model):
             pass
 
 
-class AlgorithmParametersMixin:
-    # No use!!! Only for normal running
-    pass
-
-
 class AlgorithmParametersBase(models.Model):
     analyze_interval = models.IntegerField(default=1000, verbose_name='分析问题(ms)')
     alert_interval = models.IntegerField(default=30, verbose_name='报警间隔')
