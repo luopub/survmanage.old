@@ -18,8 +18,12 @@ function copy_docker_files() {
 
     echo Update compose.yaml ...
     docker container cp docker-survmanage-1:/survmanage/docker/compose.yaml ${working_dir}
+
     docker container cp docker-survmanage-1:/survmanage/docker/upgrade_check_daemon.sh ${working_dir}
     chmod +x ${working_dir}/upgrade_check_daemon.sh
+
+    docker container cp docker-survmanage-1:/survmanage/docker/rc.local ${working_dir}
+    chmod +x ${working_dir}/rc.local
 }
 
 function networks_upgrade() {
