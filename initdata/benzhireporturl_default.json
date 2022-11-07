@@ -1,0 +1,1 @@
+[{"model": "interface.benzhireporturl", "pk": 1, "fields": {"url": "http://121.33.74.174:5000/AIMonitorApi/SendAIEventLog", "platform_name": "本质", "provider_name": "美云数字", "enabled": true, "metadata": "{\"ukey\":\"de974097365323n5452d545l4340el4k\",\"token\":\"ce0b1b4b42a7487988d9b1547bfdfbe4\",\"providername\":\"meiyunshuzi\"}"}}]

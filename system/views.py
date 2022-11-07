@@ -342,8 +342,7 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
         ChannelAlgorithm.delete_all()
         AlgorithmDefaultParameters.delete_all()
 
-        with open(settings.RESET_FLAG_FILE, 'wt') as f:
-            f.write('start reset')
+        self.start_reset_device()
 
         return Response({})
 
