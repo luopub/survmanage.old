@@ -369,7 +369,7 @@ class ProjectInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBa
         # AlgorithmDefaultParameters.delete_all()
         # ProjectInfo.delete_all()
         # User.objects.all().delete()
-        self.delete_all_data()
+        # self.delete_all_data()
 
         self.start_reset_device(True)
 

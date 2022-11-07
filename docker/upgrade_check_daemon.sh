@@ -109,6 +109,9 @@ function hard_reset_device () {
 
     docker container prune --force
 
+    # Remove all images file and uploaded files
+    docker volume ls | grep survmanage-dynamic_data | awk '{print $2}' | xargs docker volume rm
+
     # start docker, "python manage.py migrate" will run automatic
     nohup docker compose up > /dev/null 2>&1 &
 
