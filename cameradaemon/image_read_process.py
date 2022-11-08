@@ -22,6 +22,9 @@ MAX_IMAGE_WIDTH = 2560
 MAX_IMAGE_HEIGHT = 1440
 DEFAULT_IMAGE_DEPTH = 3
 
+ADDR_CHECK_INTERVAL = 1.0
+SAMPLE_INTERVAL = 0.5  # Time interval to sample images from stream
+
 
 class ImageStreamProcess(Process):
     def __init__(self, camera, cno):
@@ -58,7 +61,8 @@ class ImageStreamProcess(Process):
                 fail_count = 0
                 frame_count = 0
                 loose_count = 0
-                t1 = time.time()
+                timer_addr_check = time.time()
+                timer_sample_interval = time.time()
                 while True:
                     rv, img = cap.read()
                     if not rv:
@@ -67,6 +71,13 @@ class ImageStreamProcess(Process):
                             break
                         time.sleep(0.1)
                         continue
+
+                    # If all frames are saved, the reader may loose as much as 96% frames, so sample frame 1 per SAMPLE_INTERVAL
+                    if time.time() - timer_sample_interval < SAMPLE_INTERVAL:
+                        del img
+                        continue
+
+                    timer_sample_interval = time.time()
 
                     fail_count = 0
 
@@ -77,11 +88,11 @@ class ImageStreamProcess(Process):
 
                     frame_count += 1
 
-                    if frame_count % 100 == 0:
+                    if frame_count % 10 == 0:
                         logger.info(f'{cno}-stream frame_count={frame_count}, loose_count={loose_count}, {img.shape}, {self.raw_img_queue.qsize()}, {self.raw_img_queue.empty()}, {self.raw_img_queue.full()}')
 
-                    if time.time() - t1 >= 1:
-                        t1 = time.time()
+                    if time.time() - timer_addr_check >= ADDR_CHECK_INTERVAL:
+                        timer_addr_check = time.time()
                         # 隔段时间检测是否改变了地址
                         if camera != self.camera.value:
                             break
@@ -344,7 +355,7 @@ class ImageConsumeProcess(Process):
 
             frame_count += 1
 
-            if frame_count % 100 == 0:
+            if frame_count % 10 == 0:
                 logger.info(f'{self.cno}-read frame_count: {frame_count}')
 
             # 格式转变，BGRtoRGB
