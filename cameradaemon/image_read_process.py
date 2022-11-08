@@ -23,7 +23,7 @@ MAX_IMAGE_HEIGHT = 1440
 DEFAULT_IMAGE_DEPTH = 3
 
 ADDR_CHECK_INTERVAL = 1.0
-SAMPLE_INTERVAL = 0.5  # Time interval to sample images from stream
+SAMPLE_INTERVAL = 1.0  # Time interval to sample images from stream
 
 
 class ImageStreamProcess(Process):
