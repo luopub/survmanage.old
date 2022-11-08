@@ -52,9 +52,12 @@ class ImageStreamProcess(Process):
             if cap and cap.isOpened() and cap.read()[0]:
                 self.online.value = 1
 
+                logger.info(f'{cno}-fps={int(cap.get(cv.CAP_PROP_FPS))}, size={int(cap.get(cv.CAP_PROP_FRAME_WIDTH))}x{int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))}')
+
                 # If continuous fail, then the camera may be off line
                 fail_count = 0
                 frame_count = 0
+                loose_count = 0
                 t1 = time.time()
                 while True:
                     rv, img = cap.read()
@@ -70,9 +73,12 @@ class ImageStreamProcess(Process):
                     try:
                         self.raw_img_queue.put_nowait(img)
                     except Exception as e:
-                        pass
+                        loose_count += 1
 
                     frame_count += 1
+
+                    if frame_count % 100 == 0:
+                        logger.info(f'{cno}-stream frame_count={frame_count}, loose_count={loose_count}, {img.shape}, {self.raw_img_queue.qsize()}, {self.raw_img_queue.empty()}, {self.raw_img_queue.full()}')
 
                     if time.time() - t1 >= 1:
                         t1 = time.time()
@@ -333,10 +339,13 @@ class ImageConsumeProcess(Process):
         while True:
             try:
                 value = self.raw_img_queue.get(timeout=1)
-            except:  # Queue.Empty
+            except Exception as e:  # Queue.Empty
                 continue
 
             frame_count += 1
+
+            if frame_count % 100 == 0:
+                logger.info(f'{self.cno}-read frame_count: {frame_count}')
 
             # 格式转变，BGRtoRGB
             # frame = cv.cvtColor(value, cv.COLOR_BGR2RGB)
@@ -350,9 +359,6 @@ class ImageConsumeProcess(Process):
 
             if (time.time() - t1) * 1000 > DEFAULT_LATEST_IMAGE_INTERVAL:
                 t1 = time.time()
-
-                # print("raw_img_queue length", self.raw_img_queue.qsize(), frame_count)
-                frame_count = 0
 
                 # 每隔一小段时间保存一次最新图像
                 self.img_size[:] = frame.shape
