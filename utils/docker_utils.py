@@ -7,3 +7,10 @@ def run_host_cmd(cmd):
         f'nsenter -a -t 1 sh -c "{cmd}"',
         capture_output=True, check=True, text=True, shell=True)
     return {'stdout': resp.stdout, 'stderr': resp.stderr}
+
+
+def run_linux_cmd(cmd):
+    resp = subprocess.run(
+        f'sh -c "{cmd}"',
+        capture_output=True, check=True, text=True, shell=True)
+    return {'stdout': resp.stdout, 'stderr': resp.stderr}

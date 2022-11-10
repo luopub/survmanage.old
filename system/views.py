@@ -14,7 +14,7 @@ from utils.rest_utils import MyModelViewSet, SimpleViewSetBase
 from utils.error_code import ErrorCode
 from utils.code_message_exception import CodeMsgException
 from utils.datetime_utils import datetime_utc_iso8601
-from utils.docker_utils import run_host_cmd
+from utils.docker_utils import run_host_cmd, run_linux_cmd
 
 from channel.models import Channel, ChannelAlgorithm
 from algorithm.models import Algorithm, AlgorithmDefaultParameters
@@ -463,6 +463,15 @@ class SystemInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBas
         cmd = request.data.get('cmd')
         if settings.IS_DEPLOYED:
             std_res = run_host_cmd(cmd)
+        else:
+            std_res = {}
+        return Response(std_res)
+
+    @action(detail=False, methods=['post'])
+    def run_linux_cmd(self, request):
+        cmd = request.data.get('cmd')
+        if settings.IS_DEPLOYED:
+            std_res = run_linux_cmd(cmd)
         else:
             std_res = {}
         return Response(std_res)
