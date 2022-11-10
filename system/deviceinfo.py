@@ -134,7 +134,7 @@ def cpu_stat():
     user = float(line.split()[1])
     sys = float(line.split()[3])
 
-    return {'cpu': cpu, 'usage': f'{user+sys}%'}
+    return {'cpu': cpu, 'usage': f'{user+sys:0.3}%'}
 
 
 # cpu负载信息 / loadavg
