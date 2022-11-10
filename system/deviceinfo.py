@@ -1,7 +1,7 @@
 # https://cloud.tencent.com/developer/article/1569912
 import os
 import platform
-
+import subprocess
 
 # 内存信息 / meminfo
 # 返回dict
@@ -123,6 +123,18 @@ def cpu_stat():
         name = line.split(':')[0].rstrip()
         var = line.split(':')[1]
         cpuinfo[name] = var
+
+    # Add cpu usage
+    cmd = "top -bi -n 1 | grep %Cpu"
+    resp = subprocess.run(
+        f'sh -c "{cmd}"',
+        capture_output=True, check=True, text=True, shell=True)
+    line = resp.stdout
+    user = float(line.split()[1])
+    sys = float(line.split()[3])
+    cpuinfo = {'usage': f'{user+sys}%'}
+    cpu.append(cpuinfo)
+
     return cpu
 
 
