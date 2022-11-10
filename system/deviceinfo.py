@@ -93,20 +93,21 @@ def memory_stat():
 
 # !/usr/bin/env python
 def cpu_stat():
-    fake_value = [
-      {
-        "processor": " 0",
-        "model name": " ARMv8 Processor rev 0 (v8l)",
-        "BogoMIPS": " 62.50",
-        "Features": " fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm dcpop",
-        "CPU implementer": " 0x4e",
-        "CPU architecture": " 8",
-        "CPU variant": " 0x0",
-        "CPU part": " 0x004",
-        "CPU revision": " 0",
-        "MTS version": " 55637613"
-      },
-    ]
+    fake_value = {
+        'cpu': [{
+            "processor": " 0",
+            "model name": " ARMv8 Processor rev 0 (v8l)",
+            "BogoMIPS": " 62.50",
+            "Features": " fp asimd evtstrm aes pmull sha1 sha2 crc32 atomics fphp asimdhp cpuid asimdrdm dcpop",
+            "CPU implementer": " 0x4e",
+            "CPU architecture": " 8",
+            "CPU variant": " 0x0",
+            "CPU part": " 0x004",
+            "CPU revision": " 0",
+            "MTS version": " 55637613"
+        }],
+        'usage': '80.5%'
+    }
     if platform.system().lower() != 'linux':
         return fake_value
     cpu = []
@@ -132,10 +133,8 @@ def cpu_stat():
     line = resp.stdout
     user = float(line.split()[1])
     sys = float(line.split()[3])
-    cpuinfo = {'usage': f'{user+sys}%'}
-    cpu.append(cpuinfo)
 
-    return cpu
+    return {'cpu': cpu, 'usage': f'{user+sys}%'}
 
 
 # cpu负载信息 / loadavg
