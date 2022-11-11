@@ -55,12 +55,16 @@ class ImageStreamProcess(Process):
             if cap and cap.isOpened() and cap.read()[0]:
                 self.online.value = 1
 
-                logger.info(f'{cno}-fps={int(cap.get(cv.CAP_PROP_FPS))}, size={int(cap.get(cv.CAP_PROP_FRAME_WIDTH))}x{int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))}')
+                next_frame = cap.get(cv.CAP_PROP_POS_FRAMES)
+                fps = cap.get(cv.CAP_PROP_FPS)
+
+                logger.info(f'{cno}-fps={fps}, size={int(cap.get(cv.CAP_PROP_FRAME_WIDTH))}x{int(cap.get(cv.CAP_PROP_FRAME_HEIGHT))}, next frame={next_frame}')
 
                 # If continuous fail, then the camera may be off line
                 fail_count = 0
                 frame_count = 0
                 loose_count = 0
+                save_count = 0
                 timer_addr_check = time.time()
                 timer_sample_interval = time.time()
                 while True:
@@ -72,24 +76,26 @@ class ImageStreamProcess(Process):
                         time.sleep(0.1)
                         continue
 
+                    next_frame = cap.get(cv.CAP_PROP_POS_FRAMES)
+
+                    frame_count += 1
+
                     # If all frames are saved, the reader may loose as much as 96% frames, so sample frame 1 per SAMPLE_INTERVAL
                     if time.time() - timer_sample_interval < SAMPLE_INTERVAL:
-                        del img
                         continue
 
                     timer_sample_interval = time.time()
 
                     fail_count = 0
 
+                    save_count += 1
                     try:
-                        self.raw_img_queue.put_nowait(img)
+                        self.raw_img_queue.put_nowait(img.copy())
                     except Exception as e:
                         loose_count += 1
 
-                    frame_count += 1
-
-                    if frame_count % 10 == 0:
-                        logger.info(f'{cno}-stream frame_count={frame_count}, loose_count={loose_count}, {img.shape}, {self.raw_img_queue.qsize()}, {self.raw_img_queue.empty()}, {self.raw_img_queue.full()}')
+                    if save_count % 10 == 0:
+                        logger.info(f'{cno}-stream frame_count={frame_count}, save_count={save_count}, loose_count={loose_count}, {img.shape}, {self.raw_img_queue.qsize()}, {self.raw_img_queue.empty()}, {self.raw_img_queue.full()}, {next_frame}')
 
                     if time.time() - timer_addr_check >= ADDR_CHECK_INTERVAL:
                         timer_addr_check = time.time()
