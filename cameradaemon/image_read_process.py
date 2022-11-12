@@ -26,7 +26,7 @@ MAX_IMAGE_HEIGHT = 1440
 DEFAULT_IMAGE_DEPTH = 3
 
 ADDR_CHECK_INTERVAL = 1.0
-SAMPLE_INTERVAL = 1.0  # Time interval to sample images from stream
+SAMPLE_INTERVAL = 0.8  # Time interval to sample images from stream
 
 
 class ImageProcess(Process):
@@ -139,7 +139,7 @@ class ImageReadThread(Thread):
                 while True:
                     cap.grab()
                     frame_to_skip += 1
-                    if frame_to_skip < 5:
+                    if frame_to_skip < int(fps * SAMPLE_INTERVAL):
                         continue
                     frame_to_skip = 0
 
@@ -156,8 +156,8 @@ class ImageReadThread(Thread):
                     frame_count += 1
 
                     # If all frames are saved, the reader may loose as much as 96% frames, so sample frame 1 per SAMPLE_INTERVAL
-                    if time.time() - timer_sample_interval < SAMPLE_INTERVAL:
-                        continue
+                    # if time.time() - timer_sample_interval < SAMPLE_INTERVAL:
+                    #     continue
 
                     timer_sample_interval = time.time()
 
