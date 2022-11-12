@@ -73,9 +73,7 @@ class ImageProcess(Process):
         self.camera.value = camera
 
     def get_online(self):
-        rv = self.online.value
-        self.online.value = 0
-        return rv
+        return self.online.value
 
     def save_latest_image(self, frame):
         # 每隔一小段时间保存一次最新图像
@@ -123,6 +121,8 @@ class ImageReadThread(Thread):
             logger.info(f'{cno}-Time used for start camera: {time.time() - t1}')
 
             if cap and cap.isOpened() and cap.read()[0]:
+                self.set_oneline(1)
+
                 next_frame = cap.get(cv.CAP_PROP_POS_FRAMES)
                 fps = cap.get(cv.CAP_PROP_FPS)
 
@@ -143,8 +143,6 @@ class ImageReadThread(Thread):
                             break
                         time.sleep(0.1)
                         continue
-
-                    self.set_oneline(1)
 
                     next_frame = cap.get(cv.CAP_PROP_POS_FRAMES)
 
