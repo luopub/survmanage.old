@@ -23,7 +23,7 @@ class Alert(models.Model):
     is_misreported = models.BooleanField(default=False, verbose_name='误报')
 
     class Meta:
-        unique_together = (('channel', 'algorithm', 'date_time'), )
+        unique_together = (('channel', 'algorithm', 'img'), )
 
     post_save_handlers = []
 

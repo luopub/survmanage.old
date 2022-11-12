@@ -286,7 +286,7 @@ class DetectionModel:
         # 如果有多个类别被发现了，逐个保存，所以这里要先保存旧数据
         saved_img = results.ims[0].copy()
         saved_pred = results.pred[0]
-        saved_class_indexes = [*class_indexes]
+        saved_class_indexes = list(set(class_indexes))  # 避免同一类目多次处理
         saved_regions = {**regions}
 
         for class_index in saved_class_indexes:
