@@ -69,11 +69,17 @@ class ImageProcess(Process):
         """
         self.cas_queue.put(cas)
 
+    def get_camera(self):
+        return self.camera.value
+
     def set_camera(self, camera):
         self.camera.value = camera
 
     def get_online(self):
         return self.online.value
+
+    def set_oneline(self, online):
+        self.online.value = online
 
     def save_latest_image(self, frame):
         # 每隔一小段时间保存一次最新图像
@@ -100,17 +106,11 @@ class ImageReadThread(Thread):
         self.cno = process.cno
         self.raw_img_queue = process.raw_img_queue
 
-    def get_camera(self):
-        return self.process.camera.value
-
-    def set_oneline(self, online):
-        self.process.online.value = online
-
     def process_loop(self):
         cno = self.cno
         logger.info(f'{cno}-Process to write: {os.getpid()}')
         while True:
-            camera = self.get_camera()
+            camera = self.process.get_camera()
             if not camera:
                 time.sleep(5)
                 continue
@@ -121,7 +121,7 @@ class ImageReadThread(Thread):
             logger.info(f'{cno}-Time used for start camera: {time.time() - t1}')
 
             if cap and cap.isOpened() and cap.read()[0]:
-                self.set_oneline(1)
+                self.process.set_oneline(1)
 
                 next_frame = cap.get(cv.CAP_PROP_POS_FRAMES)
                 fps = cap.get(cv.CAP_PROP_FPS)
@@ -168,11 +168,11 @@ class ImageReadThread(Thread):
                     if time.time() - timer_addr_check >= ADDR_CHECK_INTERVAL:
                         timer_addr_check = time.time()
                         # 隔段时间检测是否改变了地址
-                        if camera != self.get_camera():
+                        if camera != self.process.get_camera():
                             break
 
-            logger.info(f'{cno}-camera is offline, camera url set to {self.get_camera()}.')
-            self.set_oneline(0)
+            logger.info(f'{cno}-camera is offline, camera url set to {self.process.get_camera()}.')
+            self.process.set_oneline(0)
             # Wait for some time to try again
             if cap:
                 cap.release()
