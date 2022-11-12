@@ -35,7 +35,7 @@ class ImageChannelsManager:
                         except:
                             pass
 
-                    logger.info(f"ImageProcess is not alive, start it: {ip.cno}")
+                    logger.info(f"ImageProcess is not alive, start it: {c+1}")
 
                     self.image_processes[c] = ip = ImageProcess(c+1, model_path=settings.MODEL_PATH, model_device=settings.MODEL_DEVICE)
 
