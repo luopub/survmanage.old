@@ -4,7 +4,10 @@ import time
 import os
 import ctypes
 from yolov5 import YOLOv5
-from multiprocessing import Process, Queue, Manager, Array
+import multiprocessing
+from multiprocessing import Process, Manager, Array
+from threading import Thread
+import queue
 
 from utils.datetime_utils import datetime_utc_to_local
 
@@ -26,23 +29,88 @@ ADDR_CHECK_INTERVAL = 1.0
 SAMPLE_INTERVAL = 1.0  # Time interval to sample images from stream
 
 
-class ImageStreamProcess(Process):
-    def __init__(self, camera, cno):
-        super(ImageStreamProcess, self).__init__(target=self.process_loop)
+class ImageProcess(Process):
+    def __init__(self, cno, model_path=None, model_device=None):
+        super(ImageProcess, self).__init__(target=self.process_loop)
         self.cno = cno
         self.queue_size = 25
-        self.raw_img_queue = Queue(self.queue_size)
-        self.camera = Manager().Value(ctypes.c_char_p, camera)
+        self.raw_img_queue = None  # Queue(self.queue_size)
+
+        self.model_path = model_path
+        self.model_device = model_device
+
+        self.consume_thread = None  # ImageConsumeThread(self, model_path=model_path, model_device=model_device)
+        self.read_thread = None  # ImageReadThread(self, camera)
+
+        self.camera = Manager().Value(ctypes.c_char_p, '')
         self.online = Manager().Value(ctypes.c_int, 0)
 
-    def change_camera(self, camera):
+        self.latest_img = Array(ctypes.c_int, np.zeros((MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT*DEFAULT_IMAGE_DEPTH, ), dtype=np.uint8), lock=True)
+        self.img_size = Array(ctypes.c_int, np.zeros((3, )).astype(int), lock=True)
+
+        self.cas_queue = multiprocessing.Queue(1)  # 接收传入参数
+
+        logger.info(f'ImageProcess inited: {cno}')
+
+    def process_loop(self):
+        self.raw_img_queue = queue.Queue(self.queue_size)
+        self.read_thread = ImageReadThread(self)
+        self.consume_thread = ImageConsumeThread(self, model_path=self.model_path, model_device=self.model_device)
+
+        self.consume_thread.start()
+        self.read_thread.start()
+
+        self.read_thread.join()
+        self.consume_thread.join()
+
+    def set_params(self, cas):
+        """
+        配置通道算法，数据来源于数据表：ChannelAlgorithm
+        """
+        self.cas_queue.put(cas)
+
+    def set_camera(self, camera):
         self.camera.value = camera
+
+    def get_online(self):
+        return self.online.value
+
+    def save_latest_image(self, frame):
+        # 每隔一小段时间保存一次最新图像
+        self.img_size[:] = frame.shape
+
+        # print("raw_img_queue length 1", self.img_size[:], frame.dtype)
+
+        self.latest_img[:frame.shape[0]*frame.shape[1]*frame.shape[2]] = frame.astype(np.uint8).reshape((-1, ))
+
+    def get_latest_image(self):
+        try:
+            height, width, depth = self.img_size[:]
+            # print("get_latest_image", height, width, depth)
+            if height * width * depth:
+                return np.array(self.latest_img[:height*width*depth]).astype(np.uint8).reshape(height, width, depth)
+        except:
+            pass
+
+
+class ImageReadThread(Thread):
+    def __init__(self, process):
+        super(ImageReadThread, self).__init__(target=self.process_loop)
+        self.process = process
+        self.cno = process.cno
+        self.raw_img_queue = process.raw_img_queue
+
+    def get_camera(self):
+        return self.process.camera.value
+
+    def set_oneline(self, online):
+        self.process.online.value = online
 
     def process_loop(self):
         cno = self.cno
         logger.info(f'{cno}-Process to write: {os.getpid()}')
         while True:
-            camera = self.camera.value
+            camera = self.get_camera()
             if not camera:
                 time.sleep(5)
                 continue
@@ -53,7 +121,7 @@ class ImageStreamProcess(Process):
             logger.info(f'{cno}-Time used for start camera: {time.time() - t1}')
 
             if cap and cap.isOpened() and cap.read()[0]:
-                self.online.value = 1
+                self.set_oneline(1)
 
                 next_frame = cap.get(cv.CAP_PROP_POS_FRAMES)
                 fps = cap.get(cv.CAP_PROP_FPS)
@@ -100,11 +168,11 @@ class ImageStreamProcess(Process):
                     if time.time() - timer_addr_check >= ADDR_CHECK_INTERVAL:
                         timer_addr_check = time.time()
                         # 隔段时间检测是否改变了地址
-                        if camera != self.camera.value:
+                        if camera != self.get_camera():
                             break
 
-            logger.info(f'{cno}-camera is offline, camera url set to {self.camera.value}.')
-            self.online.value = 0
+            logger.info(f'{cno}-camera is offline, camera url set to {self.get_camera()}.')
+            self.set_oneline(0)
             # Wait for some time to try again
             if cap:
                 cap.release()
@@ -112,11 +180,11 @@ class ImageStreamProcess(Process):
 
 
 class DetectionModel:
-    def __init__(self, model_path, model_device):
+    def __init__(self, model_path, model_device, cas_queue):
         self.model = None
         self.model_path = model_path
         self.model_device = model_device
-        self.cas_queue = Queue(1)  # 接收传入参数
+        self.cas_queue = cas_queue
         self.cas = []  # ChannelAlgorithm parameters from, list of
 
     def init_model(self):
@@ -126,12 +194,6 @@ class DetectionModel:
             logger.info(f'torch.cuda.is_available(): {torch.cuda.is_available()}')
             logger.info(f'torch.cuda.device_count(): {torch.cuda.device_count()}')
             self.model = YOLOv5(self.model_path, device=self.model_device)
-
-    def set_params(self, cas):
-        """
-        配置通道算法，数据来源于数据表：ChannelAlgorithm
-        """
-        self.cas_queue.put(cas)
 
     @staticmethod
     def time_in_alert_times(alert_times, local_time=None):
@@ -328,21 +390,14 @@ class DetectionModel:
             ImageClient(IMG_CMD_OBJECT_DETECTED, cno=cno, img_unmark=img_unmark, img=img, predicts=predicts).do_request(wait_result=False)
 
 
-class ImageConsumeProcess(Process):
-    def __init__(self, cno, raw_img_queue, model_path=None, model_device=None):
-        super(ImageConsumeProcess, self).__init__(target=self.process_loop)
-        self.cno = cno
-        self.raw_img_queue = raw_img_queue
+class ImageConsumeThread(Thread):
+    def __init__(self, process, model_path=None, model_device=None):
+        super(ImageConsumeThread, self).__init__(target=self.process_loop)
+        self.process = process
+        self.cno = process.cno
+        self.raw_img_queue = process.raw_img_queue
         # 分配一个足够大的buffer暂存最后一张图片
-        self.latest_img = Array(ctypes.c_int, np.zeros((MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT*DEFAULT_IMAGE_DEPTH, ), dtype=np.uint8), lock=True)
-        self.img_size = Array(ctypes.c_int, np.zeros((3, )).astype(int), lock=True)
-        self.model = DetectionModel(model_path, model_device)
-
-    def set_params(self, cas):
-        """
-        设置参数, 这些原子数据类型不用同步类型
-        """
-        self.model.set_params(cas)
+        self.model = DetectionModel(model_path, model_device, process.cas_queue)
 
     # 在缓冲栈中读取数据:
     def process_loop(self):
@@ -355,8 +410,9 @@ class ImageConsumeProcess(Process):
         frame_count = 0
         while True:
             try:
-                value = self.raw_img_queue.get(timeout=1)
+                value = self.raw_img_queue.get_nowait()
             except Exception as e:  # Queue.Empty
+                time.sleep(0.5)
                 continue
 
             frame_count += 1
@@ -377,18 +433,4 @@ class ImageConsumeProcess(Process):
             if (time.time() - t1) * 1000 > DEFAULT_LATEST_IMAGE_INTERVAL:
                 t1 = time.time()
 
-                # 每隔一小段时间保存一次最新图像
-                self.img_size[:] = frame.shape
-
-                # print("raw_img_queue length 1", self.img_size[:], frame.dtype)
-
-                self.latest_img[:frame.shape[0]*frame.shape[1]*frame.shape[2]] = frame.astype(np.uint8).reshape((-1, ))
-
-    def get_latest_image(self):
-        try:
-            height, width, depth = self.img_size[:]
-            # print("get_latest_image", height, width, depth)
-            if height * width * depth:
-                return np.array(self.latest_img[:height*width*depth]).astype(np.uint8).reshape(height, width, depth)
-        except:
-            pass
+                self.process.save_latest_image(frame)
