@@ -45,12 +45,21 @@ class Alert(models.Model):
             logger.info('Unknown channel %s' % cno)
             return alert_ids
 
+        saved = set()
         for predict in predicts:
             algorithm = Algorithm.get_algorithm_by_predict(predict)
             if not algorithm:
                 logger.info(f'Unknown algorithm, {cno}, {predict}')
                 continue
+
+            if algorithm.id in saved:
+                logger.info(f'Duplicate algorithm object will be saved only once: {algorithm.id}')
+                continue
+
             try:
+                # 同一时刻同一通道同一类别多个目标检测结果只保存一条记录
+                saved.add(algorithm.id)
+
                 obj = cls.objects.create(channel=channel, algorithm=algorithm, img_unmark=img_unmark, img=img)
                 alert_ids.append(obj.id)
             except Exception as e:
