@@ -1,5 +1,6 @@
 import time
 from django.conf import settings
+from threading import Thread
 
 from channel.models import Channel, ChannelAlgorithm
 from alert.models import Alert
@@ -18,23 +19,46 @@ class ImageChannelsManager:
     def __init__(self, channels_num):
         # 通道编号转换成索引
         self.channels_num = channels_num
-        self.image_processes = [ImageProcess(c+1, model_path=settings.MODEL_PATH, model_device=settings.MODEL_DEVICE) for c in range(self.channels_num)]
+        self.image_processes = [None for _ in range(self.channels_num)]
 
-    def config_channels(self):
-        for ip in self.image_processes:
-            cas = ChannelAlgorithm.get_cas_params(ip.cno)
-            ip.set_params(cas)
+    def start_channel_starter(self):
+        def starter():
+            while True:
+                for c, ip in enumerate(self.image_processes):
+                    if ip and ip.is_alive():
+                        continue
 
-        # 读取通道数据，设置camera地址
-        channels = Channel.objects.all()
-        for c in channels:
-            if c.cno > self.channels_num:
-                continue
-            self.set_channel_camera(c.cno, c.url)
+                    # 如果对象存在，释放资源
+                    if ip:
+                        try:
+                            ip.close()
+                        except:
+                            pass
 
-    def start_channels(self):
-        for ip in self.image_processes:
-            ip.start()
+                    logger.info(f"ImageProcess is not alive, start it: {ip.cno}")
+
+                    self.image_processes[c] = ip = ImageProcess(c+1, model_path=settings.MODEL_PATH, model_device=settings.MODEL_DEVICE)
+
+                    try:
+                        cas = ChannelAlgorithm.get_cas_params(ip.cno)
+                        ip.set_params(cas)
+                    except:
+                        pass
+
+                    try:
+                        channel = Channel.objects.get(cno=ip.cno)
+                        ip.set_camera(channel.url)
+                    except:
+                        pass
+
+                    ip.start()
+
+                    time.sleep(1)
+
+                # 每分钟检查一圈
+                time.sleep(60)
+
+        Thread(target=starter).start()
 
     def set_channel_camera(self, cno, camera):
         """
@@ -149,11 +173,7 @@ class ImageChannelsManager:
         return res
 
     def main_loop(self):
-        self.start_channels()
-
-        time.sleep(5)
-
-        self.config_channels()
+        self.start_channel_starter()
 
         DbKeepAliveThread().start()
         ImageServer.serve(self.handlers)
