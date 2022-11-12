@@ -135,8 +135,15 @@ class ImageReadThread(Thread):
                 save_count = 0
                 timer_addr_check = time.time()
                 timer_sample_interval = time.time()
+                frame_to_skip = 0
                 while True:
-                    rv, img = cap.read()
+                    cap.grab()
+                    frame_to_skip += 1
+                    if frame_to_skip < 5:
+                        continue
+                    frame_to_skip = 0
+
+                    rv, img = cap.retrieve()
                     if not rv:
                         fail_count += 1
                         if fail_count >= 10:
