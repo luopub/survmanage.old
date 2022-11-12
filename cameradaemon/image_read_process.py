@@ -28,12 +28,14 @@ DEFAULT_IMAGE_DEPTH = 3
 ADDR_CHECK_INTERVAL = 1.0
 SAMPLE_INTERVAL = 0.8  # Time interval to sample images from stream
 
+FRAME_QUEUE_SIZE = 10
+
 
 class ImageProcess(Process):
     def __init__(self, cno, model_path=None, model_device=None):
         super(ImageProcess, self).__init__(target=self.process_loop)
         self.cno = cno
-        self.queue_size = 25
+        self.queue_size = FRAME_QUEUE_SIZE
         self.raw_img_queue = None  # Queue(self.queue_size)
 
         self.model_path = model_path
