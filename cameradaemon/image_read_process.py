@@ -32,7 +32,7 @@ FRAME_QUEUE_SIZE = 10
 
 
 class ImageProcess(Process):
-    def __init__(self, cno, model_path=None, model_device=None):
+    def __init__(self, cno, model_path=None, model_device=None, cas=None, camera=None):
         super(ImageProcess, self).__init__(target=self.process_loop)
         self.cno = cno
         self.queue_size = FRAME_QUEUE_SIZE
@@ -51,6 +51,14 @@ class ImageProcess(Process):
         self.img_size = Array(ctypes.c_int, np.zeros((3, )).astype(int), lock=True)
 
         self.cas_queue = multiprocessing.Queue(1)  # 接收传入参数
+
+        # Set initial parameters, repeat until set correctly.
+        while self.cas_queue.qsize() == 0:
+            self.set_params(cas)
+
+        # Set initial camera, repeat until set correctly.
+        while self.camera.value != camera:
+            self.set_camera(camera)
 
         logger.info(f'ImageProcess inited: {cno}')
 

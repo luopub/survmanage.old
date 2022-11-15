@@ -25,6 +25,7 @@ class ImageChannelsManager:
         def starter():
             while True:
                 for c, ip in enumerate(self.image_processes):
+                    cno = c + 1
                     if ip and ip.is_alive():
                         continue
 
@@ -35,21 +36,12 @@ class ImageChannelsManager:
                         except:
                             pass
 
-                    logger.info(f"ImageProcess is not alive, start it: {c+1}")
+                    logger.info(f"{cno}-ImageProcess is not alive, start it")
 
-                    self.image_processes[c] = ip = ImageProcess(c+1, model_path=settings.MODEL_PATH, model_device=settings.MODEL_DEVICE)
+                    cas = ChannelAlgorithm.get_cas_params(cno)
+                    channel = Channel.objects.get(cno=cno)
 
-                    try:
-                        cas = ChannelAlgorithm.get_cas_params(ip.cno)
-                        ip.set_params(cas)
-                    except:
-                        pass
-
-                    try:
-                        channel = Channel.objects.get(cno=ip.cno)
-                        ip.set_camera(channel.url)
-                    except:
-                        pass
+                    self.image_processes[cno-1] = ip = ImageProcess(cno, model_path=settings.MODEL_PATH, model_device=settings.MODEL_DEVICE, cas=cas, camera=channel.url)
 
                     ip.start()
 
