@@ -15,6 +15,8 @@ from channel.models import Channel
 from utils.rest_mixins import GroupbyMixin
 from utils.rest_utils import MyModelViewSet, SimpleViewSetBase
 from utils.utils import get_filter_for_all_fields
+from utils.code_message_exception import CodeMsgException
+from utils.error_code import ErrorCode
 
 from cameradaemon.image_client import ImageClient
 from cameradaemon.image_server_code import *
@@ -122,6 +124,13 @@ class AlertViewSet2(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
         return response
 
     @action(detail=False, methods=['get'])
+    def download(self, request):
+        filepath = request.GET.get('filepath')
+        if filepath:
+            return self.get_file_download_response(filepath)
+        raise CodeMsgException(ErrorCode.INVALID_PARAMETERS, '参数不正确')
+
+    @action(detail=False, methods=['get'])
     def download_selected(self, request):
         ids = [int(_id) for _id in request.GET.get('ids', '').split(',') if _id]
 
@@ -129,9 +138,7 @@ class AlertViewSet2(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
 
         temp_zip_file = self.create_zip_file_from_qs(queryset)
 
-        response = self.get_file_download_response(temp_zip_file)
-
-        return response
+        return Response({'filepath': temp_zip_file})
 
     @action(detail=False, methods=['get'])
     def download_filtered(self, request):
@@ -139,9 +146,7 @@ class AlertViewSet2(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
 
         temp_zip_file = self.create_zip_file_from_qs(queryset)
 
-        response = self.get_file_download_response(temp_zip_file)
-
-        return response
+        return Response({'filepath': temp_zip_file})
 
 
 router = routers.DefaultRouter()
