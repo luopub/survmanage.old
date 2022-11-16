@@ -9,6 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters import rest_framework as filters
 from django.db.models.functions.datetime import TruncHour, TruncDay
+from django.db import connection
 
 from algorithm.models import Algorithm
 from channel.models import Channel
@@ -17,6 +18,7 @@ from utils.rest_utils import MyModelViewSet, SimpleViewSetBase
 from utils.utils import get_filter_for_all_fields
 from utils.code_message_exception import CodeMsgException
 from utils.error_code import ErrorCode
+from utils.docker_utils import run_host_cmd
 
 from cameradaemon.image_client import ImageClient
 from cameradaemon.image_server_code import *
@@ -122,6 +124,23 @@ class AlertViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
         temp_zip_file = self.create_zip_file_from_qs(queryset)
 
         return Response({'filepath': temp_zip_file})
+
+    @action(detail=False, methods=['post'])
+    def remove_all(self, request):
+        # 首先删除数据库相关数据
+        with connection.cursor() as cursor:
+            cursor.execute("delete from django_migrations where app = 'alert';")
+            cursor.execute("drop table if exists alert_alert;")
+
+        # 然后删除所有文件
+        image_paths = settings.ALERT_IMAGE_DIR.glob("*.jpg")
+        for image in image_paths:
+            image.unlink()
+
+        # 最后重启系统
+        if settings.IS_DEPLOYED:
+            run_host_cmd('cd /docker && docker compose restart')
+        return Response({})
 
 
 class AlertViewFilter2(filters.FilterSet):
