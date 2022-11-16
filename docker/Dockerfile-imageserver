@@ -9,6 +9,7 @@ RUN apt install libmysqlclient-dev -y
 RUN python3 -m pip install grpcio-tools -i https://pypi.tuna.tsinghua.edu.cn/simple
 RUN python3 -m pip install opencv-python==4.5.4.58 -i https://pypi.tuna.tsinghua.edu.cn/simple
 RUN python3 -m pip install -r requirements-imageserver.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+cp -Rf survmanage/yolov5-patch/* /usr/local/lib/python3.8/dist-packages/yolov5
 RUN export PATH=/usr/local/lib/python3.8/dist-packages:$PATH
 RUN cp -R  /usr/local/lib/python3.8/dist-packages/opencv_python.libs /usr/lib/python3.8/dist-packages
 
