@@ -66,31 +66,6 @@ class AlertViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
         self.model.objects.filter(id__in=ids).delete()
         return Response({})
 
-
-class AlertViewFilter2(filters.FilterSet):
-    class Meta:
-        fields = get_filter_for_all_fields(Alert)
-        channel_fields = get_filter_for_all_fields(Channel)
-        channel_fields = {f'channel__{k}': v for k, v in channel_fields.items()}
-        algorithm_fields = get_filter_for_all_fields(Algorithm)
-        algorithm_fields = {f'algorithm__{k}': v for k, v in algorithm_fields.items()}
-        fields.update(channel_fields)
-        fields.update(algorithm_fields)
-        model = Alert
-
-
-class AlertViewSet2(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
-    logger.debug(f'is_runserver {is_runserver()}')
-    if is_runserver():
-        queryset = Alert.objects.all().annotate(
-            hour=TruncHour('date_time'),
-            day=TruncDay('date_time')
-        )
-    model = Alert
-    filterset_class = AlertViewFilter2
-
-    serial_depth = 1
-
     def create_zip_file_from_qs(self, queryset):
 
         serializer = self.get_serializer(queryset, many=True)
@@ -147,6 +122,31 @@ class AlertViewSet2(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
         temp_zip_file = self.create_zip_file_from_qs(queryset)
 
         return Response({'filepath': temp_zip_file})
+
+
+class AlertViewFilter2(filters.FilterSet):
+    class Meta:
+        fields = get_filter_for_all_fields(Alert)
+        channel_fields = get_filter_for_all_fields(Channel)
+        channel_fields = {f'channel__{k}': v for k, v in channel_fields.items()}
+        algorithm_fields = get_filter_for_all_fields(Algorithm)
+        algorithm_fields = {f'algorithm__{k}': v for k, v in algorithm_fields.items()}
+        fields.update(channel_fields)
+        fields.update(algorithm_fields)
+        model = Alert
+
+
+class AlertViewSet2(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
+    logger.debug(f'is_runserver {is_runserver()}')
+    if is_runserver():
+        queryset = Alert.objects.all().annotate(
+            hour=TruncHour('date_time'),
+            day=TruncDay('date_time')
+        )
+    model = Alert
+    filterset_class = AlertViewFilter2
+
+    serial_depth = 1
 
 
 router = routers.DefaultRouter()
