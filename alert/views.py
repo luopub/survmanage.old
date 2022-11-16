@@ -139,7 +139,7 @@ class AlertViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
 
         # 最后重启系统
         if settings.IS_DEPLOYED:
-            run_host_cmd('cd /docker && docker compose restart')
+            run_host_cmd('cd /docker && docker compose restart &')
         return Response({})
 
 
