@@ -31,6 +31,9 @@ RANK = int(os.getenv('RANK', -1))
 matplotlib.rc('font', **{'size': 11})
 matplotlib.use('Agg')  # for writing to files only
 
+plt.rcParams['font.sans-serif'] = ['SimHei']
+plt.rcParams['axes.unicode_minus'] = False
+
 
 class Colors:
     # Ultralytics color palette https://ultralytics.com/
@@ -71,7 +74,7 @@ def check_pil_font(font=FONT, size=10):
 
 class Annotator:
     # YOLOv5 Annotator for train/val mosaics and jpgs and detect/hub inference annotations
-    def __init__(self, im, line_width=None, font_size=None, font='Arial.ttf', pil=False, example='abc'):
+    def __init__(self, im, line_width=None, font_size=None, font='Arial.Unicode.ttf', pil=True, example='abc'):
         assert im.data.contiguous, 'Image not contiguous. Apply np.ascontiguousarray(im) to Annotator() input images.'
         non_ascii = not is_ascii(example)  # non-latin labels, i.e. asian, arabic, cyrillic
         self.pil = pil or non_ascii
@@ -91,11 +94,11 @@ class Annotator:
             if label:
                 w, h = self.font.getsize(label)  # text width, height
                 outside = box[1] - h >= 0  # label fits outside box
-                self.draw.rectangle(
-                    (box[0], box[1] - h if outside else box[1], box[0] + w + 1,
-                     box[1] + 1 if outside else box[1] + h + 1),
-                    fill=color,
-                )
+                # self.draw.rectangle(
+                #     (box[0], box[1] - h if outside else box[1], box[0] + w + 1,
+                #      box[1] + 1 if outside else box[1] + h + 1),
+                #     fill=color,
+                # )
                 # self.draw.text((box[0], box[1]), label, fill=txt_color, font=self.font, anchor='ls')  # for PIL>8.0
                 self.draw.text((box[0], box[1] - h if outside else box[1]), label, fill=txt_color, font=self.font)
         else:  # cv2
@@ -106,7 +109,7 @@ class Annotator:
                 w, h = cv2.getTextSize(label, 0, fontScale=self.lw / 3, thickness=tf)[0]  # text width, height
                 outside = p1[1] - h >= 3
                 p2 = p1[0] + w, p1[1] - h - 3 if outside else p1[1] + h + 3
-                cv2.rectangle(self.im, p1, p2, color, -1, cv2.LINE_AA)  # filled
+                # cv2.rectangle(self.im, p1, p2, color, -1, cv2.LINE_AA)  # filled
                 cv2.putText(self.im,
                             label, (p1[0], p1[1] - 2 if outside else p1[1] + h + 2),
                             0,
