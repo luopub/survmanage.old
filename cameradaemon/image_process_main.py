@@ -91,7 +91,7 @@ class ImageChannelsManager:
             cno, ip, res = 0, None, None
         return cno, ip, res
 
-    def handlers(self, data):
+    def cmd_handler(self, data):
         """
         所有命令应该是json格式:
         {
@@ -168,7 +168,11 @@ class ImageChannelsManager:
         self.start_channel_starter()
 
         DbKeepAliveThread().start()
-        ImageServer.serve(self.handlers)
+        while True:
+            server_thread = Thread(target=ImageServer.serve, args=[self.cmd_handler])
+            server_thread.start()
+            server_thread.join()
+        # ImageServer.serve(self.cmd_handler)
         # while True:
         #     time.sleep(1)
 

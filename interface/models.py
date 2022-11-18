@@ -73,7 +73,7 @@ class BenzhiReportUrl(models.Model):
                 else:
                     headers = {}
 
-                logger.info(f'Reporting to benzhi: {json.dumps(data, indent=2, ensure_ascii=False)}')
+                # logger.info(f'Reporting to benzhi: {json.dumps(data, indent=2, ensure_ascii=False)}')
                 res = requests.post(obj.url, json=data, timeout=10, headers=headers)
                 if res.status_code == 200:
                     logger.info(f'Save to benzhi success: {res.json()}')
