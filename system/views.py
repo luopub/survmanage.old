@@ -444,6 +444,9 @@ class ImageIconViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase
 class SystemInfoViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleViewSetBase):
     model = SystemInfo
 
+    authentication_classes = []
+    permission_classes = []
+
     @action(detail=False, methods=['get'])
     def get_system_datetime(self, request):
         return Response({'datetime': datetime_utc_iso8601()})
