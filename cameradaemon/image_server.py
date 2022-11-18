@@ -12,6 +12,7 @@ class ImageServerHandler(socketserver.BaseRequestHandler):
 
     def handle(self):
         try:
+            logger.info(f'Request to be receive')
             # self.request is the TCP socket connected to the client
             data = self.request.recv(1024).strip()
             if data:
