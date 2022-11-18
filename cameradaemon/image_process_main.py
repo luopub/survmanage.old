@@ -172,6 +172,7 @@ class ImageChannelsManager:
             server_thread = Thread(target=ImageServer.serve, args=[self.cmd_handler])
             server_thread.start()
             server_thread.join()
+            logger.warning('Imager server_thread exited. Restart it.')
         # ImageServer.serve(self.cmd_handler)
         # while True:
         #     time.sleep(1)
