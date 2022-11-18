@@ -11,18 +11,21 @@ class ImageServerHandler(socketserver.BaseRequestHandler):
         super(ImageServerHandler, self).__init__(*args, **kwargs)
 
     def handle(self):
-        # self.request is the TCP socket connected to the client
-        data = self.request.recv(1024).strip()
-        if data:
-            data = json.loads(data.decode('utf8'))
+        try:
+            # self.request is the TCP socket connected to the client
+            data = self.request.recv(1024).strip()
+            if data:
+                data = json.loads(data.decode('utf8'))
 
-            logger.info(f"{self.client_address[0]} request received: {data}")
+                logger.info(f"{self.client_address[0]} request received: {data}")
 
-            res = self.server.handler(data)
+                res = self.server.handler(data)
 
-            if res:
-                res = json.dumps(res).encode('utf8')
-                self.request.sendall(res)
+                if res:
+                    res = json.dumps(res).encode('utf8')
+                    self.request.sendall(res)
+        except Exception as e:
+            logger.warning(f'Fail to receive from request: {str(e)}')
 
 
 class ImageServer(socketserver.TCPServer):

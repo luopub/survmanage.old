@@ -12,6 +12,8 @@ class ImageClient:
         self.data = kwargs
 
     def do_request(self, wait_result=True):
+        logger.info(f"Sending to server: cmd={self.cmd}, data={self.data}")
+
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
                 # Connect to server and send data
