@@ -62,7 +62,8 @@ services:
       imageserver:latest
     runtime:
       nvidia
-    # ports:
+    ports:
+      - "8888:8888"
     #  - "6790:6790"
     volumes:
       - /etc/netplan:/etc/netplan
