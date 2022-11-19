@@ -30,7 +30,7 @@ class ImageClient:
                     # Receive data from the server and shut down
                     received = str(sock.recv(1024), "utf8")
 
-                    logger.info("Received: {}".format(received))
+                    logger.info("Result received: {}".format(received))
 
                     return json.loads(received)
         except Exception as e:
