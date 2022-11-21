@@ -1,14 +1,19 @@
 本文档提供的接口根据《AI事件向本质安全管理平台推送统一接口V1.1.doc》提供
 3.1事件类型订阅接⼝
-    URL:  https://cn-nn-dx-1.natfrp.cloud:21435/api/v1/interface/benzhisubcriptions/get_subscription_types/
+    URL(POST):  https://cn-nn-dx-1.natfrp.cloud:21435/api/v1/interface/benzhisubcriptions/get_subscription_types/
     示例数据：
-    {
+        {
         "code": 0,
         "msg": "Success",
         "message": "Success",
         "data": {
             "ProviderName": "美云数字",
             "list": [
+                {
+                    "EventType": "person",
+                    "EventTypeName": "区域入侵",
+                    "IsSubscribed": true
+                },
                 {
                     "EventType": "no helmet",
                     "EventTypeName": "未戴安全帽",
@@ -27,11 +32,6 @@
                 {
                     "EventType": "smoking",
                     "EventTypeName": "吸烟",
-                    "IsSubscribed": true
-                },
-                {
-                    "EventType": "shoes",
-                    "EventTypeName": "鞋子",
                     "IsSubscribed": true
                 },
                 {
@@ -54,7 +54,7 @@
     }
 
 3.2报警摄像头基础数据获得接⼝
-    URL: https://cn-nn-dx-1.natfrp.cloud:21435/api/v1/interface/benzhisubcriptions/get_subscription_cameras/
+    URL(POST): https://cn-nn-dx-1.natfrp.cloud:21435/api/v1/interface/benzhisubcriptions/get_subscription_cameras/
     示例数据：
     {
         "code": 0,

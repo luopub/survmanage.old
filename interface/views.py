@@ -29,6 +29,63 @@ class BenzhiSubscriptionViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleVi
 
     @action(detail=False, methods=['get', 'post'])
     def get_subscription_types(self, request):
+        """
+        本质平台接口：
+            3.1 事件类型订阅接
+        调用：
+            (post) https://cn-nn-dx-1.natfrp.cloud:21435/api/v1/interface/benzhisubcriptions/get_subscription_types/
+        样本数据：
+            {
+                "code": 0,
+                "msg": "Success",
+                "message": "Success",
+                "data": {
+                    "ProviderName": "美云数字",
+                    "list": [
+                        {
+                            "EventType": "person",
+                            "EventTypeName": "区域入侵",
+                            "IsSubscribed": true
+                        },
+                        {
+                            "EventType": "no helmet",
+                            "EventTypeName": "未戴安全帽",
+                            "IsSubscribed": true
+                        },
+                        {
+                            "EventType": "no clothing",
+                            "EventTypeName": "未穿反光衣",
+                            "IsSubscribed": true
+                        },
+                        {
+                            "EventType": "no mask",
+                            "EventTypeName": "未戴口罩",
+                            "IsSubscribed": true
+                        },
+                        {
+                            "EventType": "smoking",
+                            "EventTypeName": "吸烟",
+                            "IsSubscribed": true
+                        },
+                        {
+                            "EventType": "slippers",
+                            "EventTypeName": "拖鞋",
+                            "IsSubscribed": true
+                        },
+                        {
+                            "EventType": "call",
+                            "EventTypeName": "打电话",
+                            "IsSubscribed": true
+                        },
+                        {
+                            "EventType": "play phone",
+                            "EventTypeName": "玩手机",
+                            "IsSubscribed": true
+                        }
+                    ]
+                }
+            }
+        """
         provider_name = BenzhiReportUrl.objects.first().provider_name
         subscptions = self.model.objects.all().values('algorithm__name', 'algorithm__event_type', 'algorithm__name_ch', 'is_subscribed')
         subscptions = list(map(lambda x: {
@@ -41,6 +98,11 @@ class BenzhiSubscriptionViewSet(GroupbyMixin, MyModelViewSet, metaclass=SimpleVi
     @action(detail=False, methods=['post'])
     def get_subscription_cameras(self, request):
         """
+        本质平台接口：
+            3.2 报警摄像头基础数据获得接⼝
+        调用：
+            (post) https://cn-nn-dx-1.natfrp.cloud:21435/api/v1/interface/benzhisubcriptions/get_subscription_cameras/
+        样本数据：
         {
             "code": "0",
             "msg": "",
