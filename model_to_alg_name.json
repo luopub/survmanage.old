@@ -1,13 +1,13 @@
 {
-    "Person": "person",
-    "Helmet": "helmet",
-    "No Helmet": "no helmet",
-    "Clothing": "clothing",
-    "No Clothing": "no clothing",
-    "Mask": "mask",
-    "No Mask": "no mask",
-    "Smoking": "smoking",
-    "Slippers": "slippers",
-    "Call": "call",
-    "Play Phone": "play phone"
+    "人体": "人体",
+    "佩戴安全帽": "佩戴安全帽",
+    "安全帽": "安全帽",
+    "穿戴反光衣": "穿戴反光衣",
+    "反光衣": "反光衣",
+    "佩戴口罩": "佩戴口罩",
+    "口罩": "口罩",
+    "吸烟": "吸烟",
+    "拖鞋": "拖鞋",
+    "打手机": "打手机",
+    "玩手机": "玩手机"
 }
