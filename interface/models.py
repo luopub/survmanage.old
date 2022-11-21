@@ -47,11 +47,11 @@ class BenzhiReportUrl(models.Model):
 
     @classmethod
     def send_alert(cls, alert):
-        try:
-            if not BenzhiSubscription.objects.get(algorithm=alert.algorithm).is_subscribed:
-                return
+        if not BenzhiSubscription.objects.get(algorithm=alert.algorithm).is_subscribed:
+            return
 
-            for obj in cls.objects.filter(enabled=True):
+        for obj in cls.objects.filter(enabled=True):
+            try:
 
                 dt = datetime_utc_to_local(alert.date_time)
                 data = {
@@ -79,9 +79,9 @@ class BenzhiReportUrl(models.Model):
                     logger.info(f'Save to benzhi success: {res.json()}')
                 else:
                     logger.info(f'Send to benzhi failed: {res.status_code}, {res.test}')
-        except Exception as e:
-            logger.info(f'Error sending alert report: {str(e)}')
-            pass
+            except Exception as e:
+                logger.info(f'Error sending alert report: {str(e)}')
+                pass
 
 
 Alert.add_post_save_handler(BenzhiReportUrl.send_alert)
