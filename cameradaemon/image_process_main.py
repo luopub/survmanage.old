@@ -1,6 +1,7 @@
 import time
 from django.conf import settings
 from threading import Thread
+import os
 
 from channel.models import Channel, ChannelAlgorithm
 from alert.models import Alert
@@ -179,6 +180,8 @@ class ImageChannelsManager:
 
     @staticmethod
     def main(**kwargs):
+        logger.info(f'Image process main: {os.getpid()}')
+
         max_camera = int(kwargs.get('max_camera', '2'))
 
         rtsp_url = 'rtsp://admin:qwer123456@192.168.0.6:554/h264/ch1/main/av_stream'
