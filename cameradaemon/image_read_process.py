@@ -6,7 +6,7 @@ import ctypes
 from yolov5 import YOLOv5
 import multiprocessing
 from multiprocessing import Process, Manager, Array
-from threading import Thread
+from threading import Thread, Lock
 import queue
 
 from utils.datetime_utils import datetime_utc_to_local
@@ -112,10 +112,13 @@ class ImageProcess(Process):
         return cno in self.channels
 
     def process_loop(self):
+        model, model_lock = DetectionModel(self.model_path, self.model_device), Lock()
+        model.init_model()
+
         for cno, channel in self.channels.items():
             channel.init_raw_image_queue()
             channel.read_thread = ImageReadThread(self, cno, channel.raw_img_queue)
-            channel.consume_thread = ImageConsumeThread(self, cno, channel.raw_img_queue, channel.cas_queue, model_path=self.model_path, model_device=self.model_device)
+            channel.consume_thread = ImageConsumeThread(self, cno, channel.raw_img_queue, channel.cas_queue, model, model_lock)
 
             channel.consume_thread.start()
             channel.read_thread.start()
@@ -292,7 +295,8 @@ class DetectionModel:
 
         return False
 
-    def addRoiRegion(self, results, regions, index):
+    @staticmethod
+    def addRoiRegion(results, regions, index):
         """
         Add ROI regions on picture
         results: results from model prediction
@@ -436,20 +440,19 @@ class DetectionModel:
 
 
 class ImageConsumeThread(Thread):
-    def __init__(self, process, cno, raw_img_queue, cas_queue, model_path=None, model_device=None):
+    def __init__(self, process, cno, raw_img_queue, cas_queue, model, model_lock):
         super(ImageConsumeThread, self).__init__(target=self.process_loop)
         self.process = process
         self.cno = cno
         self.raw_img_queue = raw_img_queue
-        # 分配一个足够大的buffer暂存最后一张图片
-        self.model = DetectionModel(model_path, model_device)
         self.cas_queue = cas_queue
         self.cas = []  # ChannelAlgorithm parameters from, list of
+        self.model = model
+        self.model_lock = model_lock
 
     # 在缓冲栈中读取数据:
     def process_loop(self):
         logger.info(f'{self.cno}-Process to read: %s' % os.getpid())
-        self.model.init_model()
         # 开始时间
         t1 = time.time()  # 最新图片保存定时
         t2 = time.time()  # 预测定时
@@ -484,7 +487,8 @@ class ImageConsumeThread(Thread):
                 except queue.Empty as e:
                     pass
 
-                self.model.predict_single_frame(frame, self.cno, self.cas)
+                with self.model_lock:
+                    self.model.predict_single_frame(frame, self.cno, self.cas)
 
             if (time.time() - t1) * 1000 > DEFAULT_LATEST_IMAGE_INTERVAL:
                 t1 = time.time()
