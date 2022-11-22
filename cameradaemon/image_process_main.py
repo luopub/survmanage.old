@@ -15,18 +15,19 @@ from .utils import save_raw_frame
 from utils.logutils import get_logger
 logger = get_logger(__file__)
 
+CHANNEL_PER_PROCESS = 2
+
 
 class ImageChannelsManager:
     def __init__(self, channels_num):
         # 通道编号转换成索引
         self.channels_num = channels_num
-        self.image_processes = [None for _ in range(self.channels_num)]
+        self.image_processes = [None for _ in range((self.channels_num // CHANNEL_PER_PROCESS) + (1 if (self.channels_num % CHANNEL_PER_PROCESS) else 0))]
 
     def start_channel_starter(self):
         def starter():
             while True:
-                for c, ip in enumerate(self.image_processes):
-                    cno = c + 1
+                for i, ip in enumerate(self.image_processes):
                     if ip and ip.is_alive():
                         continue
 
@@ -37,12 +38,14 @@ class ImageChannelsManager:
                         except:
                             pass
 
-                    logger.info(f"{cno}-ImageProcess is not alive, start it")
+                    cnos = [j + 1 for j in range(i * CHANNEL_PER_PROCESS, (i + 1) * CHANNEL_PER_PROCESS)]
 
-                    cas = ChannelAlgorithm.get_cas_params(cno)
-                    channel = Channel.objects.get(cno=cno)
+                    logger.info(f"{i}-{cnos}-ImageProcess is not alive, start it")
 
-                    self.image_processes[cno-1] = ip = ImageProcess(cno, model_path=settings.MODEL_PATH, model_device=settings.MODEL_DEVICE, cas=cas, camera=channel.url)
+                    cas = [ChannelAlgorithm.get_cas_params(cno) for cno in cnos]
+                    cameras = [Channel.objects.get(cno=cno).url for cno in cnos]
+
+                    self.image_processes[i] = ip = ImageProcess(cnos, model_path=settings.MODEL_PATH, model_device=settings.MODEL_DEVICE, cas=cas, cameras=cameras)
 
                     ip.start()
 
@@ -61,16 +64,13 @@ class ImageChannelsManager:
         """
         if cno > len(self.image_processes):
             return False
-        self.image_processes[cno - 1].set_camera(camera)
+        self.image_processes[cno - 1].set_camera(cno, camera)
         return True
 
-    def set_channel_algorithms(self):
-        pass
+    def get_latest_image(self, ip, cno):
+        frame = ip.get_latest_image(cno)
 
-    def get_latest_image(self, ip):
-        frame = ip.get_latest_image()
-
-        return save_raw_frame(frame, cno=ip.cno)
+        return save_raw_frame(frame, cno=cno)
 
     def get_ip_from_cmd(self, data):
         """
@@ -78,7 +78,7 @@ class ImageChannelsManager:
         """
         try:
             cno = data['data']['cno']
-            ips = list(filter(lambda x: x.cno == cno, self.image_processes))
+            ips = list(filter(lambda x: x.has_channel(cno), self.image_processes))
             if ips:
                 ip = ips[0]
                 res = None
@@ -133,17 +133,17 @@ class ImageChannelsManager:
                 res = success_result()
             elif cmd == IMG_CMD_GET_LATEST_IMAGE:
                 if ip:
-                    res = success_result(data_={'filename': self.get_latest_image(ip)})
+                    res = success_result(data_={'filename': self.get_latest_image(ip, cno)})
             elif cmd == IMG_CMD_CHANNEL_ALG_CHANGED:
                 if ip:
-                    cas = ChannelAlgorithm.get_cas_params(ip.cno)
-                    ip.set_params(cas)
+                    cas = ChannelAlgorithm.get_cas_params(cno)
+                    ip.set_params(cno, cas)
                     res = success_result()
             elif cmd == IMG_CMD_CHANNEL_CONFIGURED:
                 if ip:
                     try:
                         channel = Channel.objects.get(cno=cno)
-                        ip.set_camera(channel.url)
+                        ip.set_camera(cno, channel.url)
                         res = success_result()
                     except Channel.DoesNotExist:
                         res = {
@@ -152,11 +152,11 @@ class ImageChannelsManager:
                         }
             elif cmd == IMG_CMD_CHANNEL_DELETED:
                 if ip:
-                    ip.set_camera('')
+                    ip.set_camera(cno, '')
                     res = success_result()
             elif cmd == IMG_CMD_CHANNEL_GET_ONLINE:
                 if ip:
-                    res = success_result(data_={'online': not not ip.get_online()})
+                    res = success_result(data_={'online': not not ip.get_online(cno)})
             elif cmd == IMG_CMD_DB_KEEP_ALIVE:
                 alert_count = Alert.objects.count()
                 logger.info(f'DbKeepAliveThread, alerts count = {alert_count}')

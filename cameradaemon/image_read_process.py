@@ -31,15 +31,10 @@ SAMPLE_INTERVAL = 0.8  # Time interval to sample images from stream
 FRAME_QUEUE_SIZE = 10
 
 
-class ImageProcess(Process):
-    def __init__(self, cno, model_path=None, model_device=None, cas=None, camera=None):
-        super(ImageProcess, self).__init__(target=self.process_loop)
-        self.cno = cno
+class ChannelData:
+    def __init__(self, cas, camera):
         self.queue_size = FRAME_QUEUE_SIZE
         self.raw_img_queue = None  # Queue(self.queue_size)
-
-        self.model_path = model_path
-        self.model_device = model_device
 
         self.consume_thread = None  # ImageConsumeThread(self, model_path=model_path, model_device=model_device)
         self.read_thread = None  # ImageReadThread(self, camera)
@@ -47,8 +42,8 @@ class ImageProcess(Process):
         self.camera = Manager().Value(ctypes.c_char_p, '')
         self.online = Manager().Value(ctypes.c_int, 0)
 
-        self.latest_img = Array(ctypes.c_int, np.zeros((MAX_IMAGE_WIDTH*MAX_IMAGE_HEIGHT*DEFAULT_IMAGE_DEPTH, ), dtype=np.uint8), lock=True)
-        self.img_size = Array(ctypes.c_int, np.zeros((3, )).astype(int), lock=True)
+        self.latest_img = Array(ctypes.c_int, np.zeros((MAX_IMAGE_WIDTH * MAX_IMAGE_HEIGHT * DEFAULT_IMAGE_DEPTH,), dtype=np.uint8), lock=True)
+        self.img_size = Array(ctypes.c_int, np.zeros((3,)).astype(int), lock=True)
 
         self.cas_queue = multiprocessing.Queue(1)  # 接收传入参数
 
@@ -60,24 +55,14 @@ class ImageProcess(Process):
         while self.camera.value != camera:
             self.set_camera(camera)
 
-        logger.info(f'ImageProcess inited: {cno}')
-
-    def process_loop(self):
-        self.raw_img_queue = queue.Queue(self.queue_size)
-        self.read_thread = ImageReadThread(self, self.cno, self.raw_img_queue)
-        self.consume_thread = ImageConsumeThread(self, self.cno, self.raw_img_queue, self.cas_queue, model_path=self.model_path, model_device=self.model_device)
-
-        self.consume_thread.start()
-        self.read_thread.start()
-
-        self.read_thread.join()
-        self.consume_thread.join()
-
     def set_params(self, cas):
         """
         配置通道算法，数据来源于数据表：ChannelAlgorithm
         """
         self.cas_queue.put(cas)
+
+    def init_raw_image_queue(self):
+        self.raw_img_queue = queue.Queue(self.queue_size)
 
     def get_camera(self):
         return self.camera.value
@@ -88,7 +73,7 @@ class ImageProcess(Process):
     def get_online(self):
         return self.online.value
 
-    def set_oneline(self, online):
+    def set_online(self, online):
         self.online.value = online
 
     def save_latest_image(self, frame):
@@ -109,6 +94,58 @@ class ImageProcess(Process):
             pass
 
 
+class ImageProcess(Process):
+    """
+    Each process deal with a group of channels
+    """
+    def __init__(self, cnos, model_path=None, model_device=None, cas=None, cameras=None):
+        super(ImageProcess, self).__init__(target=self.process_loop)
+
+        self.model_path = model_path
+        self.model_device = model_device
+
+        self.channels = {cno: ChannelData(cas[i], cameras[i]) for i, cno in enumerate(cnos)}
+
+        logger.info(f'ImageProcess inited: {cnos}')
+
+    def has_channel(self, cno):
+        return cno in self.channels
+
+    def process_loop(self):
+        for cno, channel in self.channels.items():
+            channel.init_raw_image_queue()
+            channel.read_thread = ImageReadThread(self, cno, channel.raw_img_queue)
+            channel.consume_thread = ImageConsumeThread(self, cno, channel.raw_img_queue, channel.cas_queue, model_path=self.model_path, model_device=self.model_device)
+
+            channel.consume_thread.start()
+            channel.read_thread.start()
+
+        for _, channel in self.channels.items():
+            channel.read_thread.join()
+            channel.consume_thread.join()
+
+    def set_params(self, cno, cas):
+        self.channels[cno].set_params(cas)
+
+    def get_camera(self, cno):
+        return self.channels[cno].get_camera()
+
+    def set_camera(self, cno, camera):
+        self.channels[cno].set_camera(camera)
+
+    def get_online(self, cno):
+        return self.channels[cno].get_online()
+
+    def set_online(self, cno, online):
+        self.channels[cno].set_online(online)
+
+    def save_latest_image(self, cno, frame):
+        self.channels[cno].save_latest_image(frame)
+
+    def get_latest_image(self, cno):
+        return self.channels[cno].get_latest_image()
+
+
 class ImageReadThread(Thread):
     def __init__(self, process, cno, raw_img_queue):
         super(ImageReadThread, self).__init__(target=self.process_loop)
@@ -120,7 +157,7 @@ class ImageReadThread(Thread):
         cno = self.cno
         logger.info(f'{cno}-Process to write: {os.getpid()}')
         while True:
-            camera = self.process.get_camera()
+            camera = self.process.get_camera(self.cno)
             if not camera:
                 time.sleep(5)
                 continue
@@ -131,7 +168,7 @@ class ImageReadThread(Thread):
             logger.info(f'{cno}-Time used for start camera: {time.time() - t1}')
 
             if cap and cap.isOpened() and cap.read()[0]:
-                self.process.set_oneline(1)
+                self.process.set_online(self.cno, 1)
 
                 next_frame = cap.get(cv.CAP_PROP_POS_FRAMES)
                 fps = cap.get(cv.CAP_PROP_FPS)
@@ -185,11 +222,11 @@ class ImageReadThread(Thread):
                     if time.time() - timer_addr_check >= ADDR_CHECK_INTERVAL:
                         timer_addr_check = time.time()
                         # 隔段时间检测是否改变了地址
-                        if camera != self.process.get_camera():
+                        if camera != self.process.get_camera(self.cno):
                             break
 
-            logger.info(f'{cno}-camera is offline, camera url set to {self.process.get_camera()}.')
-            self.process.set_oneline(0)
+            logger.info(f'{cno}-camera is offline, camera url set to {self.process.get_camera(self.cno)}.')
+            self.process.set_online(self.cno, 0)
             # Wait for some time to try again
             if cap:
                 cap.release()
@@ -450,4 +487,4 @@ class ImageConsumeThread(Thread):
             if (time.time() - t1) * 1000 > DEFAULT_LATEST_IMAGE_INTERVAL:
                 t1 = time.time()
 
-                self.process.save_latest_image(frame)
+                self.process.save_latest_image(self.cno, frame)
