@@ -69,8 +69,8 @@ class ImageChannelsManager:
 
     def get_latest_image(self, ip, cno):
         frame = ip.get_latest_image(cno)
-
-        return save_raw_frame(frame, cno=cno)
+        if frame is not None:
+            return save_raw_frame(frame, cno=cno)
 
     def get_ip_from_cmd(self, data):
         """

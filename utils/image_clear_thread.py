@@ -20,8 +20,9 @@ class ImageClearThread(Thread):
         self.semaphore = Semaphore()
 
     def put_image(self, image, time_to_clear=300):
-        with self.semaphore:
-            self.images.add((image, time_to_clear, time.time()))
+        if image:
+            with self.semaphore:
+                self.images.add((image, time_to_clear, time.time()))
 
     def loop(self):
         while True:

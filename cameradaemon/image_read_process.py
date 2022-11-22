@@ -42,8 +42,8 @@ class ChannelData:
         self.camera = Manager().Value(ctypes.c_char_p, '')
         self.online = Manager().Value(ctypes.c_int, 0)
 
-        self.latest_img = Array(ctypes.c_int, np.zeros((MAX_IMAGE_WIDTH * MAX_IMAGE_HEIGHT * DEFAULT_IMAGE_DEPTH,), dtype=np.uint8), lock=True)
-        self.img_size = Array(ctypes.c_int, np.zeros((3,)).astype(int), lock=True)
+        self.latest_img = multiprocessing.Queue(1)
+        self.latest_img_saved = None
 
         self.cas_queue = multiprocessing.Queue(1)  # 接收传入参数
 
@@ -78,20 +78,23 @@ class ChannelData:
 
     def save_latest_image(self, frame):
         # 每隔一小段时间保存一次最新图像
-        self.img_size[:] = frame.shape
+        try:
+            self.lastest_img.get_nowait()
+        except:  # Empty as e:
+            pass
 
-        # print("raw_img_queue length 1", self.img_size[:], frame.dtype)
-
-        self.latest_img[:frame.shape[0]*frame.shape[1]*frame.shape[2]] = frame.astype(np.uint8).reshape((-1, ))
+        try:
+            self.latest_img.put_nowait(frame)
+        except:
+            pass
 
     def get_latest_image(self):
         try:
-            height, width, depth = self.img_size[:]
-            # print("get_latest_image", height, width, depth)
-            if height * width * depth:
-                return np.array(self.latest_img[:height*width*depth]).astype(np.uint8).reshape(height, width, depth)
+            self.latest_img_saved = self.latest_img.get_nowait()
+            return self.latest_img_saved
         except:
-            pass
+            if self.get_online():
+                return self.latest_img_saved
 
 
 class ImageProcess(Process):
@@ -120,8 +123,8 @@ class ImageProcess(Process):
             channel.read_thread = ImageReadThread(self, cno, channel.raw_img_queue)
             channel.consume_thread = ImageConsumeThread(self, cno, channel.raw_img_queue, channel.cas_queue, model, model_lock)
 
-            channel.consume_thread.start()
             channel.read_thread.start()
+            channel.consume_thread.start()
 
         for _, channel in self.channels.items():
             channel.read_thread.join()
