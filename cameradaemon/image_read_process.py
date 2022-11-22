@@ -234,12 +234,10 @@ class ImageReadThread(Thread):
 
 
 class DetectionModel:
-    def __init__(self, model_path, model_device, cas_queue):
+    def __init__(self, model_path, model_device):
         self.model = None
         self.model_path = model_path
         self.model_device = model_device
-        self.cas_queue = cas_queue
-        self.cas = []  # ChannelAlgorithm parameters from, list of
 
     def init_model(self):
         if self.model_path:
@@ -312,26 +310,19 @@ class DetectionModel:
 
             results.ims[0] = cv.addWeighted(results.ims[0], 1.0, blk, 0.4, 1)
 
-    def predict_single_frame(self, raw_frame, cno=0):
-        try:
-            # 检查是否有新参数
-            cas = self.cas_queue.get_nowait()
-            # 添加一些键值，便于后续处理
-            for ca in cas:
-                # 上一次检测时间
-                ca['last_predict_time'] = time.time() - ca['analyze_interval'] / 1000  # 减去间隔以便能够立刻开始检测
-                # 上一次报警时间
-                ca['last_alert_time'] = time.time() - ca['alert_interval']  # 减去间隔以便能够立刻开始报警
-            self.cas = cas
-        except:
-            pass
+    def predict_single_frame(self, raw_frame, cno, cas):
+        for ca in cas:
+            # 上一次检测时间
+            ca['last_predict_time'] = time.time() - ca['analyze_interval'] / 1000  # 减去间隔以便能够立刻开始检测
+            # 上一次报警时间
+            ca['last_alert_time'] = time.time() - ca['alert_interval']  # 减去间隔以便能够立刻开始报警
 
         # debug0820
         # import json
-        # print('predict_single_frame ', time.time(), json.dumps(self.cas))
+        # print('predict_single_frame ', time.time(), json.dumps(cas))
 
         # 只选取指定通道的参数
-        cas = [ca for ca in self.cas if ca['channel__cno'] == cno]
+        cas = [ca for ca in cas if ca['channel__cno'] == cno]
 
         # 如果当前通道没有检测参数，就不用检测
         if not cas:
@@ -451,7 +442,9 @@ class ImageConsumeThread(Thread):
         self.cno = cno
         self.raw_img_queue = raw_img_queue
         # 分配一个足够大的buffer暂存最后一张图片
-        self.model = DetectionModel(model_path, model_device, cas_queue)
+        self.model = DetectionModel(model_path, model_device)
+        self.cas_queue = cas_queue
+        self.cas = []  # ChannelAlgorithm parameters from, list of
 
     # 在缓冲栈中读取数据:
     def process_loop(self):
@@ -482,7 +475,16 @@ class ImageConsumeThread(Thread):
 
             if (time.time() - t2) * 1000 > DEFAULT_DETECT_TICK:
                 t2 = time.time()
-                self.model.predict_single_frame(frame, cno=self.cno)
+
+                try:
+                    # 检查是否有新参数
+                    cas = self.cas_queue.get_nowait()
+                    # 添加一些键值，便于后续处理
+                    self.cas = cas
+                except queue.Empty as e:
+                    pass
+
+                self.model.predict_single_frame(frame, self.cno, self.cas)
 
             if (time.time() - t1) * 1000 > DEFAULT_LATEST_IMAGE_INTERVAL:
                 t1 = time.time()
