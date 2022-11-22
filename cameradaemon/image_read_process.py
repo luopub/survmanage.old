@@ -64,8 +64,8 @@ class ImageProcess(Process):
 
     def process_loop(self):
         self.raw_img_queue = queue.Queue(self.queue_size)
-        self.read_thread = ImageReadThread(self)
-        self.consume_thread = ImageConsumeThread(self, model_path=self.model_path, model_device=self.model_device)
+        self.read_thread = ImageReadThread(self, self.cno, self.raw_img_queue)
+        self.consume_thread = ImageConsumeThread(self, self.cno, self.raw_img_queue, self.cas_queue, model_path=self.model_path, model_device=self.model_device)
 
         self.consume_thread.start()
         self.read_thread.start()
@@ -110,11 +110,11 @@ class ImageProcess(Process):
 
 
 class ImageReadThread(Thread):
-    def __init__(self, process):
+    def __init__(self, process, cno, raw_img_queue):
         super(ImageReadThread, self).__init__(target=self.process_loop)
         self.process = process
-        self.cno = process.cno
-        self.raw_img_queue = process.raw_img_queue
+        self.cno = cno
+        self.raw_img_queue = raw_img_queue
 
     def process_loop(self):
         cno = self.cno
@@ -408,13 +408,13 @@ class DetectionModel:
 
 
 class ImageConsumeThread(Thread):
-    def __init__(self, process, model_path=None, model_device=None):
+    def __init__(self, process, cno, raw_img_queue, cas_queue, model_path=None, model_device=None):
         super(ImageConsumeThread, self).__init__(target=self.process_loop)
         self.process = process
-        self.cno = process.cno
-        self.raw_img_queue = process.raw_img_queue
+        self.cno = cno
+        self.raw_img_queue = raw_img_queue
         # 分配一个足够大的buffer暂存最后一张图片
-        self.model = DetectionModel(model_path, model_device, process.cas_queue)
+        self.model = DetectionModel(model_path, model_device, cas_queue)
 
     # 在缓冲栈中读取数据:
     def process_loop(self):
