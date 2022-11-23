@@ -3,55 +3,55 @@
     URL(POST):  https://cn-nn-dx-1.natfrp.cloud:21435/api/v1/interface/benzhisubcriptions/get_subscription_types/
     示例数据：
         {
-        "code": 0,
-        "msg": "Success",
-        "message": "Success",
-        "data": {
-            "ProviderName": "美云数字",
-            "list": [
-                {
-                    "EventType": "person",
-                    "EventTypeName": "区域入侵",
-                    "IsSubscribed": true
-                },
-                {
-                    "EventType": "no helmet",
-                    "EventTypeName": "未戴安全帽",
-                    "IsSubscribed": true
-                },
-                {
-                    "EventType": "no clothing",
-                    "EventTypeName": "未穿反光衣",
-                    "IsSubscribed": true
-                },
-                {
-                    "EventType": "no mask",
-                    "EventTypeName": "未戴口罩",
-                    "IsSubscribed": true
-                },
-                {
-                    "EventType": "smoking",
-                    "EventTypeName": "吸烟",
-                    "IsSubscribed": true
-                },
-                {
-                    "EventType": "slippers",
-                    "EventTypeName": "拖鞋",
-                    "IsSubscribed": true
-                },
-                {
-                    "EventType": "call",
-                    "EventTypeName": "打电话",
-                    "IsSubscribed": true
-                },
-                {
-                    "EventType": "play phone",
-                    "EventTypeName": "玩手机",
-                    "IsSubscribed": true
-                }
-            ]
+            "code": 0,
+            "msg": "Success",
+            "message": "Success",
+            "data": {
+                "ProviderName": "美云数字",
+                "list": [
+                    {
+                        "EventType": "人体",
+                        "EventTypeName": "区域入侵",
+                        "IsSubscribed": true
+                    },
+                    {
+                        "EventType": "安全帽",
+                        "EventTypeName": "安全帽",
+                        "IsSubscribed": true
+                    },
+                    {
+                        "EventType": "反光衣",
+                        "EventTypeName": "反光衣",
+                        "IsSubscribed": true
+                    },
+                    {
+                        "EventType": "口罩",
+                        "EventTypeName": "口罩",
+                        "IsSubscribed": true
+                    },
+                    {
+                        "EventType": "吸烟",
+                        "EventTypeName": "吸烟",
+                        "IsSubscribed": true
+                    },
+                    {
+                        "EventType": "拖鞋",
+                        "EventTypeName": "拖鞋",
+                        "IsSubscribed": true
+                    },
+                    {
+                        "EventType": "打手机",
+                        "EventTypeName": "打手机",
+                        "IsSubscribed": true
+                    },
+                    {
+                        "EventType": "玩手机",
+                        "EventTypeName": "玩手机",
+                        "IsSubscribed": true
+                    }
+                ]
+            }
         }
-    }
 
 3.2报警摄像头基础数据获得接⼝
     URL(POST): https://cn-nn-dx-1.natfrp.cloud:21435/api/v1/interface/benzhisubcriptions/get_subscription_cameras/
