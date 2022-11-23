@@ -318,19 +318,6 @@ class DetectionModel:
             results.ims[0] = cv.addWeighted(results.ims[0], 1.0, blk, 0.4, 1)
 
     def predict_single_frame(self, raw_frame, cno, cas):
-        for ca in cas:
-            # 上一次检测时间
-            ca['last_predict_time'] = time.time() - ca['analyze_interval'] / 1000  # 减去间隔以便能够立刻开始检测
-            # 上一次报警时间
-            ca['last_alert_time'] = time.time() - ca['alert_interval']  # 减去间隔以便能够立刻开始报警
-
-        # debug0820
-        # import json
-        # print('predict_single_frame ', time.time(), json.dumps(cas))
-
-        # 只选取指定通道的参数
-        cas = [ca for ca in cas if ca['channel__cno'] == cno]
-
         # 如果当前通道没有检测参数，就不用检测
         if not cas:
             return
@@ -436,7 +423,7 @@ class DetectionModel:
                         ca['last_alert_time'] = time.time()
                         break
 
-            logger.info(f'{cno}-predicts: , {predicts}')
+            logger.info(f'{cno}-predicts: {predicts}')
 
             # 保存报警信息
             ImageClient(IMG_CMD_OBJECT_DETECTED, cno=cno, img_unmark=img_unmark, img=img, predicts=predicts).do_request(wait_result=False)
@@ -485,7 +472,14 @@ class ImageConsumeThread(Thread):
                 try:
                     # 检查是否有新参数
                     cas = self.cas_queue.get_nowait()
+
                     # 添加一些键值，便于后续处理
+                    for ca in cas:
+                        # 上一次检测时间
+                        ca['last_predict_time'] = time.time() - ca['analyze_interval'] / 1000  # 减去间隔以便能够立刻开始检测
+                        # 上一次报警时间
+                        ca['last_alert_time'] = time.time() - ca['alert_interval']  # 减去间隔以便能够立刻开始报警
+
                     self.cas = cas
                 except queue.Empty as e:
                     pass
