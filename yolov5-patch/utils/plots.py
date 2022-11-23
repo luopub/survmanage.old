@@ -39,8 +39,8 @@ class Colors:
     # Ultralytics color palette https://ultralytics.com/
     def __init__(self):
         # hex = matplotlib.colors.TABLEAU_COLORS.values()
-        hexs = ('FF3838', 'FF3838', 'FF3838', 'FF3838', 'FF3838', 'FF3838', 'FF3838', 'FF3838', 'FF3838', 'FF3838',
-                'FF3838', 'FF3838', 'FF3838', 'FF3838', 'FF3838', 'FF3838', 'FF3838', 'FF3838', 'FF3838', 'FF3838')
+        hexs = ('FF0000', 'FF0000', 'FF0000', 'FF0000', 'FF0000', 'FF0000', 'FF0000', 'FF0000', 'FF0000', 'FF0000',
+                'FF0000', 'FF0000', 'FF0000', 'FF0000', 'FF0000', 'FF0000', 'FF0000', 'FF0000', 'FF0000', 'FF0000')
         self.palette = [self.hex2rgb(f'#{c}') for c in hexs]
         self.n = len(self.palette)
 

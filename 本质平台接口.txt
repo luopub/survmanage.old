@@ -56,25 +56,109 @@
 3.2报警摄像头基础数据获得接⼝
     URL(POST): https://cn-nn-dx-1.natfrp.cloud:21435/api/v1/interface/benzhisubcriptions/get_subscription_cameras/
     示例数据：
-    {
-        "code": 0,
-        "msg": "Success",
-        "message": "Success",
-        "data": {
-            "ProviderName": "美云数字",
-            "list": [
-                {
-                    "cameraId": "0d0bf5ae8df41740c5f9896774a51133",
-                    "name": "南中TJ04-气瓶存放区",
-                    "installLocation": "南中4标TJ04",
-                    "longitude": "",
-                    "latitude": "",
-                    "createTime": "2022-10-20 18:45:23",
-                    "updateTime": "2022-10-20 18:46:03",
-                    "projectName": "美云数字",
-                    "regionName": "",
-                    "regionPathName": ""
-                }
-            ]
+        {
+            "code": 0,
+            "msg": "Success",
+            "message": "Success",
+            "data": {
+                "ProviderName": "美云数字",
+                "list": [
+                    {
+                        "cameraId": "0d0bf5ae8df41740c5f9896774a51133",
+                        "name": "南中TJ04标气瓶存放区",
+                        "installLocation": "南中TJ04标美云数字AI",
+                        "longitude": "",
+                        "latitude": "",
+                        "createTime": "2022-10-20 18:45:23",
+                        "updateTime": "2022-11-22 15:28:48",
+                        "projectName": "南中123",
+                        "regionName": "南中TJ04标美云数字AI",
+                        "regionPathName": ""
+                    },
+                    {
+                        "cameraId": "e46595d449b6020818ab5ca57a09b402",
+                        "name": "南中TJ04标-1号车间蒸养区",
+                        "installLocation": "南中TJ04标美云数字AI",
+                        "longitude": "",
+                        "latitude": "",
+                        "createTime": "2022-11-09 21:20:08",
+                        "updateTime": "2022-11-15 12:02:54",
+                        "projectName": "南中123",
+                        "regionName": "南中TJ04标美云数字AI",
+                        "regionPathName": ""
+                    },
+                    {
+                        "cameraId": "0746cf1ee766b5d6e26e1131273531e7",
+                        "name": "南中TJ04标-2号车间蒸养区",
+                        "installLocation": "南中TJ04标美云数字AI",
+                        "longitude": "",
+                        "latitude": "",
+                        "createTime": "2022-11-09 21:21:16",
+                        "updateTime": "2022-11-09 21:21:16",
+                        "projectName": "南中123",
+                        "regionName": "南中TJ04标美云数字AI",
+                        "regionPathName": ""
+                    },
+                    {
+                        "cameraId": "45027fcb278f4beb276b917248aa0eda",
+                        "name": "南中TJ04标-传统生产线-浇筑区2",
+                        "installLocation": "南中TJ04标美云数字AI",
+                        "longitude": "",
+                        "latitude": "",
+                        "createTime": "2022-11-09 21:23:20",
+                        "updateTime": "2022-11-11 01:13:55",
+                        "projectName": "南中123",
+                        "regionName": "南中TJ04标美云数字AI",
+                        "regionPathName": ""
+                    },
+                    {
+                        "cameraId": "97ce2e9aaa0d334a368441a39bfec0f7",
+                        "name": "南中TJ04标-传统线3号钢筋绑扎区",
+                        "installLocation": "南中TJ04标美云数字AI",
+                        "longitude": "",
+                        "latitude": "",
+                        "createTime": "2022-11-09 21:25:15",
+                        "updateTime": "2022-11-11 01:14:38",
+                        "projectName": "南中123",
+                        "regionName": "南中TJ04标美云数字AI",
+                        "regionPathName": ""
+                    },
+                    {
+                        "cameraId": "0536876accb7d93b508e0f719f1cf7c5",
+                        "name": "南中TJ04标-2号车间钢筋存放区",
+                        "installLocation": "南中TJ04标美云数字AI",
+                        "longitude": "",
+                        "latitude": "",
+                        "createTime": "2022-11-09 21:25:39",
+                        "updateTime": "2022-11-11 01:15:16",
+                        "projectName": "南中123",
+                        "regionName": "南中TJ04标美云数字AI",
+                        "regionPathName": ""
+                    },
+                    {
+                        "cameraId": "684b86c276e2a964e4f5dc7d25da47aa",
+                        "name": "南中TJ04标-2号车间钢筋绑扎区-1",
+                        "installLocation": "南中TJ04标美云数字AI",
+                        "longitude": "",
+                        "latitude": "",
+                        "createTime": "2022-11-09 21:26:06",
+                        "updateTime": "2022-11-11 01:15:22",
+                        "projectName": "南中123",
+                        "regionName": "南中TJ04标美云数字AI",
+                        "regionPathName": ""
+                    },
+                    {
+                        "cameraId": "1380738fae13c5ad11e483aeaecaf999",
+                        "name": "南中TJ04标-培训中心1楼",
+                        "installLocation": "南中TJ04标美云数字AI",
+                        "longitude": "",
+                        "latitude": "",
+                        "createTime": "2022-11-09 21:57:04",
+                        "updateTime": "2022-11-09 21:57:04",
+                        "projectName": "南中123",
+                        "regionName": "南中TJ04标美云数字AI",
+                        "regionPathName": ""
+                    }
+                ]
+            }
         }
-    }
